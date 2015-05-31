@@ -18,10 +18,10 @@ int main() {
   }, int{6});
 
   auto fun = [](uint64_t i) {
-    std::cout << std::pow(i, 2) << std::endl;
+    auto res = std::pow(i, 2);
   };
 
-  std::vector<long> values(600);
+  std::vector<long> values(6000);
   long i = 0;
   std::generate(values.begin(), values.end(), [&] { return i++; });
 
@@ -29,10 +29,10 @@ int main() {
     wsharing.run(std::move(fun), std::move(val));
   }
 
-  /*wsharing.run([](int i) -> int {
+  wsharing.run([](int i) -> int {
     std::cout << i << std::endl;
     return i;
-  }, int{6});*/
+  }, int{6});
 
   wsharing.shutdown();
 }
