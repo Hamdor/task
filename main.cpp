@@ -29,5 +29,10 @@ int main() {
     wsharing.run(std::move(fun), std::move(val));
   }
 
+  /*wsharing.run([](int i) -> int {
+    std::cout << i << std::endl;
+    return i;
+  }, int{6});*/
+
   wsharing.shutdown();
 }
