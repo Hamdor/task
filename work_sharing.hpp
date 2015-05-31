@@ -7,8 +7,7 @@
 #include <queue>
 #include <thread>
 #include <memory>
-
-#include <iostream>
+#include <condition_variable>
 
 #include "work_item.hpp"
 
@@ -23,15 +22,19 @@ class work_sharing {
         auto& ws = *work_sharing::instance;
         while(alive) {
           std::unique_ptr<storeable> fun = nullptr;
-          while(ws.m_jobs.empty()) {
-            // TODO: Cond var here...
-            //if (!alive) { return; }
-          }
           { // Lifetime scope of unique_lock
             std::unique_lock<std::mutex> lock(ws.m_lock);
-            if (ws.m_jobs.empty()) { continue; }
+            while (ws.m_jobs.empty()) {
+              if (!alive) {
+                return;
+              }
+              ws.m_cond_new.wait(lock);
+            }
             fun = std::move(ws.m_jobs.front());
             ws.m_jobs.pop();
+            if (ws.m_jobs.empty()) {
+              ws.m_cond_empty.notify_all();
+            }
           }
           if (fun) {
             fun->exec();
@@ -50,8 +53,17 @@ class work_sharing {
  public:
   template<typename T, typename... Xs>
   void run(T&& t, Xs&&... xs) {
+    std::unique_lock<std::mutex> lock(m_lock);
     m_jobs.emplace(new work_item<T, Xs...>(std::move(t),
                                            std::forward<Xs>(xs)...));
+    m_cond_new.notify_all();
+  }
+
+  template<typename T, typename... Xs>
+  void run(T& t, Xs&... xs) {
+    std::unique_lock<std::mutex> lock(m_lock);
+    m_jobs.emplace(new work_item<T, Xs...>(t, xs...));
+    m_cond_new.notify_all();
   }
 
   static work_sharing& get_instance();
@@ -62,6 +74,8 @@ class work_sharing {
   static work_sharing* instance;
 
   std::mutex m_lock;
+  std::condition_variable m_cond_empty;
+  std::condition_variable m_cond_new;
   std::queue<std::unique_ptr<storeable>> m_jobs;
   worker m_workers[4]; // TODO: use hw concurrency...
 };

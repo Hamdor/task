@@ -16,6 +16,12 @@ struct work_item : public storeable {
     // nop
   }
 
+  work_item(T& t, Xs&... xs)
+    : m_fun(t)
+    , m_args(std::make_tuple(xs...)) {
+    // nop
+  }
+
   using ret_type = typename std::result_of<T(Xs...)>::type;
   using ret_type_t = std::conditional_t<
     std::is_same<ret_type, void>::value, int, ret_type>;
