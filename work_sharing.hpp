@@ -26,10 +26,11 @@ class work_sharing {
           }
           { // Lifetime scope of unique_lock
             std::unique_lock<std::mutex> lock(ws.m_lock);
+            if (ws.m_jobs.empty()) { continue; }
             fun = ws.m_jobs.front();
             ws.m_jobs.pop();
           }
-          fun->exec();
+          if (fun) fun->exec();
           delete fun;
         }
       });
