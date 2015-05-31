@@ -6,6 +6,9 @@
 #include <mutex>
 #include <queue>
 #include <thread>
+#include <memory>
+
+#include <iostream>
 
 #include "work_item.hpp"
 
@@ -19,7 +22,7 @@ class work_sharing {
         }
         auto& ws = *work_sharing::instance;
         while(alive) {
-          storeable* fun = nullptr;
+          std::unique_ptr<storeable> fun = nullptr;
           while(ws.m_jobs.empty()) {
             // TODO: Cond var here...
             //if (!alive) { return; }
@@ -27,11 +30,12 @@ class work_sharing {
           { // Lifetime scope of unique_lock
             std::unique_lock<std::mutex> lock(ws.m_lock);
             if (ws.m_jobs.empty()) { continue; }
-            fun = ws.m_jobs.front();
+            fun = std::move(ws.m_jobs.front());
             ws.m_jobs.pop();
           }
-          if (fun) fun->exec();
-          delete fun;
+          if (fun) {
+            fun->exec();
+          }
         }
       });
     }
@@ -58,7 +62,7 @@ class work_sharing {
   static work_sharing* instance;
 
   std::mutex m_lock;
-  std::queue<storeable*> m_jobs;
+  std::queue<std::unique_ptr<storeable>> m_jobs;
   worker m_workers[4]; // TODO: use hw concurrency...
 };
 

@@ -3,7 +3,6 @@
 #define WORK_ITEM_HPP
 
 #include <tuple>
-#include <future>
 #include <type_traits>
 
 #include "storeable.hpp"
@@ -12,16 +11,15 @@
 template<typename T, typename... Xs>
 struct work_item : public storeable {
   work_item(T&& t, Xs&&... xs)
-    : m_fun(t)
+    : m_fun(std::move(t))
     , m_args(std::make_tuple(std::forward<Xs>(xs)...)) {
     // nop
   }
 
   using ret_type = typename std::result_of<T(Xs...)>::type;
-  std::conditional_t<std::is_same<ret_type, void>::value, int, ret_type> m_ret;
-
-  //ret_type m_ret;
-  //std::future<ret_type> m_future;
+  using ret_type_t = std::conditional_t<
+    std::is_same<ret_type, void>::value, int, ret_type>;
+  ret_type_t m_ret;
 
   T m_fun;
   std::tuple<Xs...> m_args;

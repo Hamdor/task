@@ -32,7 +32,7 @@ int main() {
   wsharing.run([](int i) -> int {
     std::cout << i << std::endl;
     return i;
-  }, int{6});
+  }, int{42});
 
   wsharing.shutdown();
 }

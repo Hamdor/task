@@ -24,4 +24,6 @@ void work_sharing::shutdown() {
   for (worker& w : m_workers) {
     w.m_thread.join();
   }
+  delete instance;
+  instance = nullptr;
 }
