@@ -1,8 +1,9 @@
-#include <iostream>
+#include <cmath>
 #include <mutex>
 #include <vector>
+#include <iostream>
 #include <algorithm>
-#include <cmath>
+
 #include "work_sharing.hpp"
 
 int main() {

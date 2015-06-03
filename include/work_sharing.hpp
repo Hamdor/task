@@ -1,4 +1,20 @@
-
+/*******************************************************************************
+ *                            _            _    _                              *
+ *                           | |          | |  (_)                             *
+ *                           | |_ __ _ ___| | ___                              *
+ *                           | __/ _` / __| |/ / |                             *
+ *                           | || (_| \__ \   <| |                             *
+ *                            \__\__,_|___/_|\_\_|                             *
+ *                                                                             *
+ * Copyright (C) 2015                                                          *
+ * Marian Triebe  <marian.triebe  (at) haw-hamburg.de>                         *
+ *                                                                             *
+ * Distributed under the terms and conditions of the BSD 3-Clause License      *
+ * See accompanying file LICENSE.                                              *
+ *                                                                             *
+ * If you did not receive a copy of the license file, see                      *
+ * http://opensource.org/licenses/BSD-3-Clause                                 *
+ *******************************************************************************/
 
 #ifndef WORK_SHARING_HPP
 #define WORK_SHARING_HPP
@@ -77,7 +93,7 @@ class work_sharing {
   std::condition_variable m_cond_empty;
   std::condition_variable m_cond_new;
   std::queue<std::unique_ptr<storeable>> m_jobs;
-  worker m_workers[4]; // TODO: use hw concurrency...
+  worker m_workers[8]; // TODO: use hw concurrency...
 };
 
 #endif // WORK_SHARING_HPP
