@@ -23,6 +23,7 @@
 #include <queue>
 #include <thread>
 #include <memory>
+#include <future>
 #include <condition_variable>
 
 #include "work_item.hpp"
@@ -68,7 +69,10 @@ class work_sharing {
 
  public:
   template<typename T, typename... Xs>
-  void run(T&& t, Xs&&... xs) {
+  typename std::enable_if<
+    std::is_void<typename std::result_of<T(Xs...)>::type>{}
+  >::type
+  run(T&& t, Xs&&... xs) {
     std::unique_lock<std::mutex> lock(m_lock);
     m_jobs.emplace(new work_item<T, Xs...>(std::move(t),
                                            std::forward<Xs>(xs)...));
@@ -76,10 +80,40 @@ class work_sharing {
   }
 
   template<typename T, typename... Xs>
-  void run(T& t, Xs&... xs) {
+  typename std::enable_if<
+    !std::is_void<typename std::result_of<T(Xs...)>::type>{},
+    typename std::future<typename std::result_of<T(Xs...)>::type>
+  >::type
+  run(T&& t, Xs&&... xs) {
+    auto job = new work_item<T, Xs...>(std::move(t),
+                                       std::forward<Xs>(xs)...);
+    std::unique_lock<std::mutex> lock(m_lock);
+    m_jobs.emplace(job);
+    m_cond_new.notify_all();
+    return job->get_future();
+  }
+
+  template<typename T, typename... Xs>
+  typename std::enable_if<
+    std::is_void<typename std::result_of<T(Xs...)>::type>{}
+  >::type
+  run(T& t, Xs&... xs) {
     std::unique_lock<std::mutex> lock(m_lock);
     m_jobs.emplace(new work_item<T, Xs...>(t, xs...));
     m_cond_new.notify_all();
+  }
+
+  template<typename T, typename... Xs>
+  typename std::enable_if<
+    !std::is_void<typename std::result_of<T(Xs...)>::type>{},
+    typename std::future<typename std::result_of<T(Xs...)>::type>
+  >::type
+  run(T& t, Xs&... xs) {
+    auto job = new work_item<T, Xs...>(t, xs...);
+    std::unique_lock<std::mutex> lock(m_lock);
+    m_jobs.emplace(job);
+    m_cond_new.notify_all();
+    return job->get_future();
   }
 
   static work_sharing& get_instance();

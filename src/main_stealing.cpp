@@ -37,10 +37,13 @@ int main() {
     wsharing.run(std::move(fun), std::move(val));
   }
 
-  wsharing.run([](int i) -> int {
+  auto future = wsharing.run([](int i) -> int {
     std::cout << i << std::endl;
-    return i;
+    return i + 1;
   }, int{42});
+
+  future.wait();
+  std::cout << "future: " << future.get() << std::endl;
 
   wsharing.shutdown();
 }

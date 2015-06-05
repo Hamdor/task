@@ -20,6 +20,7 @@
 #define WORK_ITEM_HPP
 
 #include <tuple>
+#include <future>
 #include <type_traits>
 
 #include "storeable.hpp"
@@ -42,10 +43,14 @@ struct work_item : public storeable {
   using ret_type = typename std::result_of<T(Xs...)>::type;
   using ret_type_t = std::conditional_t<
     std::is_same<ret_type, void>::value, int, ret_type>;
-  ret_type_t m_ret;
+  std::promise<ret_type_t> m_ret;
 
   T m_fun;
   std::tuple<Xs...> m_args;
+
+  std::future<ret_type_t> get_future() {
+    return m_ret.get_future();
+  }
 
   virtual void exec() {
     call_unpack(typename unpack_tuple<sizeof...(Xs)>::type());
@@ -54,8 +59,9 @@ struct work_item : public storeable {
   template<typename F = ret_type, int... S>
   typename std::enable_if<!std::is_void<F>{}, F>::type
   call_unpack(unpacked<S...>) {
-    m_ret = m_fun(std::get<S>(m_args)...);
-    return m_ret;
+    auto resu = m_fun(std::get<S>(m_args)...);
+    m_ret.set_value(resu);
+    return resu;
   }
 
   template<typename F = ret_type, int... S>
