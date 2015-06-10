@@ -40,9 +40,7 @@ struct work_item : public storeable {
     // nop
   }
 
-  using ret_type = typename std::result_of<T(Xs...)>::type;
-  using ret_type_t = std::conditional_t<
-    std::is_same<ret_type, void>::value, int, ret_type>;
+  using ret_type_t = typename std::result_of<T(Xs...)>::type;
   std::promise<ret_type_t> m_ret;
 
   T m_fun;
@@ -56,7 +54,7 @@ struct work_item : public storeable {
     call_unpack(typename unpack_tuple<sizeof...(Xs)>::type());
   }
 
-  template<typename F = ret_type, int... S>
+  template<typename F = ret_type_t, int... S>
   typename std::enable_if<!std::is_void<F>{}, F>::type
   call_unpack(unpacked<S...>) {
     auto resu = m_fun(std::get<S>(m_args)...);
@@ -64,7 +62,7 @@ struct work_item : public storeable {
     return resu;
   }
 
-  template<typename F = ret_type, int... S>
+  template<typename F = ret_type_t, int... S>
   typename std::enable_if<std::is_void<F>{}>::type
   call_unpack(unpacked<S...>) {
     m_fun(std::get<S>(m_args)...);

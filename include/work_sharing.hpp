@@ -67,53 +67,24 @@ class work_sharing {
 
   work_sharing() = default;
 
+  template<typename T, typename... Xs>
+  auto emplace(work_item<T, Xs...>* ptr) {
+    std::unique_lock<std::mutex> lock(m_lock);
+    m_jobs.emplace(ptr);
+    m_cond_new.notify_all();
+    return ptr->get_future();
+  }
+
  public:
   template<typename T, typename... Xs>
-  typename std::enable_if<
-    std::is_void<typename std::result_of<T(Xs...)>::type>{}
-  >::type
-  run(T&& t, Xs&&... xs) {
-    std::unique_lock<std::mutex> lock(m_lock);
-    m_jobs.emplace(new work_item<T, Xs...>(std::move(t),
+  auto run(T&& t, Xs&&... xs) {
+    return emplace(new work_item<T, Xs...>(std::move(t),
                                            std::forward<Xs>(xs)...));
-    m_cond_new.notify_all();
   }
 
   template<typename T, typename... Xs>
-  typename std::enable_if<
-    !std::is_void<typename std::result_of<T(Xs...)>::type>{},
-    typename std::future<typename std::result_of<T(Xs...)>::type>
-  >::type
-  run(T&& t, Xs&&... xs) {
-    auto job = new work_item<T, Xs...>(std::move(t),
-                                       std::forward<Xs>(xs)...);
-    std::unique_lock<std::mutex> lock(m_lock);
-    m_jobs.emplace(job);
-    m_cond_new.notify_all();
-    return job->get_future();
-  }
-
-  template<typename T, typename... Xs>
-  typename std::enable_if<
-    std::is_void<typename std::result_of<T(Xs...)>::type>{}
-  >::type
-  run(T& t, Xs&... xs) {
-    std::unique_lock<std::mutex> lock(m_lock);
-    m_jobs.emplace(new work_item<T, Xs...>(t, xs...));
-    m_cond_new.notify_all();
-  }
-
-  template<typename T, typename... Xs>
-  typename std::enable_if<
-    !std::is_void<typename std::result_of<T(Xs...)>::type>{},
-    typename std::future<typename std::result_of<T(Xs...)>::type>
-  >::type
-  run(T& t, Xs&... xs) {
-    auto job = new work_item<T, Xs...>(t, xs...);
-    std::unique_lock<std::mutex> lock(m_lock);
-    m_jobs.emplace(job);
-    m_cond_new.notify_all();
-    return job->get_future();
+  auto run(T& t, Xs&... xs) {
+    return emplace(new work_item<T, Xs...>(t, xs...));
   }
 
   static work_sharing& get_instance();

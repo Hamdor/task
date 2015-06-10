@@ -78,21 +78,7 @@ class work_stealing {
     volatile bool alive;
 
     template<typename T, typename... Xs>
-    typename std::enable_if<
-      std::is_void<typename std::result_of<T(Xs...)>::type>{}
-    >::type
-    enqueue(T&& t, Xs&&... xs) {
-      std::unique_lock<std::mutex> lock(m_lock);
-      m_jobs.emplace(new work_item<T, Xs...>(std::move(t),
-                                             std::forward<Xs>(xs)...));
-      m_new.notify_all();
-    }
-
-    template<typename T, typename... Xs>
-    typename std::enable_if<
-      !std::is_void<typename std::result_of<T(Xs...)>::type>{},
-      typename std::future<typename std::result_of<T(Xs...)>::type>
-    >::type
+    std::future<typename std::result_of<T(Xs...)>::type>
     enqueue(T&& t, Xs&&... xs) {
       auto job = new work_item<T, Xs...>(std::move(t), std::forward<Xs>(xs)...);
       std::unique_lock<std::mutex> lock(m_lock);
@@ -102,20 +88,7 @@ class work_stealing {
     }
 
     template<typename T, typename... Xs>
-    typename std::enable_if<
-      std::is_void<typename std::result_of<T(Xs...)>::type>{}
-    >::type
-    enqueue(T& t, Xs&... xs) {
-      std::unique_lock<std::mutex> lock(m_lock);
-      m_jobs.emplace(new work_item<T, Xs...>(t, xs...));
-      m_new.notify_all();
-    }
-
-    template<typename T, typename... Xs>
-    typename std::enable_if<
-      !std::is_void<typename std::result_of<T(Xs...)>::type>{},
-      typename std::future<typename std::result_of<T(Xs...)>::type>
-    >::type
+    std::future<typename std::result_of<T(Xs...)>::type>
     enqueue(T& t, Xs&... xs) {
       auto job = new work_item<T, Xs...>(t, xs...);
       std::unique_lock<std::mutex> lock(m_lock);
@@ -131,38 +104,14 @@ class work_stealing {
 
  public:
   template<typename T, typename... Xs>
-  typename std::enable_if<
-    std::is_void<typename std::result_of<T(Xs...)>::type>{}
-  >::type
-  run(T&& t, Xs&&... xs) {
-    size_t enqueu_to = ++m_next_enque % m_number_of_workers;
-    m_workers[enqueu_to].enqueue(std::move(t), std::forward<Xs>(xs)...);
-  }
-
-  template<typename T, typename... Xs>
-  typename std::enable_if<
-    !std::is_void<typename std::result_of<T(Xs...)>::type>{},
-    typename std::future<typename std::result_of<T(Xs...)>::type>
-  >::type
+  std::future<typename std::result_of<T(Xs...)>::type>
   run(T&& t, Xs&&... xs) {
     size_t enqueu_to = ++m_next_enque % m_number_of_workers;
     return m_workers[enqueu_to].enqueue(std::move(t), std::forward<Xs>(xs)...);
   }
 
   template<typename T, typename... Xs>
-  typename std::enable_if<
-    std::is_void<typename std::result_of<T(Xs...)>::type>{}
-  >::type
-  run(T& t, Xs&... xs) {
-    size_t enqueu_to = ++m_next_enque % m_number_of_workers;
-    m_workers[enqueu_to].enqueue(t, xs...);
-  }
-
-  template<typename T, typename... Xs>
-  typename std::enable_if<
-    !std::is_void<typename std::result_of<T(Xs...)>::type>{},
-    typename std::future<typename std::result_of<T(Xs...)>::type>
-  >::type
+  std::future<typename std::result_of<T(Xs...)>::type>
   run(T& t, Xs&... xs) {
     size_t enqueu_to = ++m_next_enque % m_number_of_workers;
     return m_workers[enqueu_to].enqueue(t, xs...);
