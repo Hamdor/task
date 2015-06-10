@@ -16,39 +16,23 @@
  * http://opensource.org/licenses/BSD-3-Clause                                 *
  *******************************************************************************/
 
-#include "work_sharing.hpp"
+#ifndef SCHEDULER_DATA_HPP
+#define SCHEDULER_DATA_HPP
 
-std::mutex work_sharing::s_mtx;
-work_sharing* work_sharing::instance = nullptr;
-work_sharing::worker work_sharing::m_workers[];
+#include <mutex>
+#include <condition_variable>
 
-work_sharing& work_sharing::get_instance() {
-  if (instance == nullptr) {
-    std::unique_lock<std::mutex> lock(s_mtx);
-    if (instance == nullptr) {
-      instance = new work_sharing;
-    }
-  }
-  return *instance;
-}
+class work_stealing;
+class work_sharing;
 
-void work_sharing::shutdown() {
-  { // Life scope of unique_lock
-    std::unique_lock<std::mutex> lock(m_data.m_lock);
-    while(!m_jobs.empty()) {
-      m_data.m_empty.wait(lock);
-    }
-  }
-  for (worker& w : m_workers) {
-    w.alive = false;
-  }
-  // Spawn some dummy jobs to get workers out of thei blocking state
-  for (size_t i = 0; i < CONCURRENCY_LEVEL*2; ++i) {
-    run([]() {});
-  }
-  for (worker& w : m_workers) {
-    w.m_thread.join();
-  }
-  delete instance;
-  instance = nullptr;
-}
+class scheduler_data {
+  friend work_stealing;
+  friend work_sharing;
+
+  std::thread m_thread;
+  std::mutex  m_lock;
+  std::condition_variable m_empty;
+  std::condition_variable m_new;
+};
+
+#endif // SCHEDULER_DATA_HPP

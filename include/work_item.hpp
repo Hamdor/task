@@ -66,6 +66,7 @@ struct work_item : public storeable {
   typename std::enable_if<std::is_void<F>{}>::type
   call_unpack(unpacked<S...>) {
     m_fun(std::get<S>(m_args)...);
+    m_ret.set_value();
   }
 };
 

@@ -19,14 +19,19 @@
 #ifndef WORK_SHARING_HPP
 #define WORK_SHARING_HPP
 
-#include <mutex>
 #include <queue>
 #include <thread>
 #include <memory>
 #include <future>
-#include <condition_variable>
 
 #include "work_item.hpp"
+#include "scheduler_data.hpp"
+
+namespace {
+
+using queue_t = std::queue<std::unique_ptr<storeable>>;
+
+} // namespace <anonymous>
 
 class work_sharing {
   struct worker {
@@ -40,22 +45,20 @@ class work_sharing {
         while(alive) {
           std::unique_ptr<storeable> fun = nullptr;
           { // Lifetime scope of unique_lock
-            std::unique_lock<std::mutex> lock(ws.m_lock);
+            std::unique_lock<std::mutex> lock(ws.m_data.m_lock);
             while (ws.m_jobs.empty()) {
               if (!alive) {
                 return;
               }
-              ws.m_cond_new.wait(lock);
+              ws.m_data.m_new.wait(lock);
             }
             fun = std::move(ws.m_jobs.front());
             ws.m_jobs.pop();
             if (ws.m_jobs.empty()) {
-              ws.m_cond_empty.notify_all();
+              ws.m_data.m_empty.notify_all();
             }
           }
-          if (fun) {
-            fun->exec();
-          }
+          fun->exec();
         }
       });
     }
@@ -69,9 +72,9 @@ class work_sharing {
 
   template<typename T, typename... Xs>
   auto emplace(work_item<T, Xs...>* ptr) {
-    std::unique_lock<std::mutex> lock(m_lock);
+    std::unique_lock<std::mutex> lock(m_data.m_lock);
     m_jobs.emplace(ptr);
-    m_cond_new.notify_all();
+    m_data.m_new.notify_all();
     return ptr->get_future();
   }
 
@@ -94,11 +97,11 @@ class work_sharing {
   static std::mutex s_mtx;
   static work_sharing* instance;
 
-  std::mutex m_lock;
-  std::condition_variable m_cond_empty;
-  std::condition_variable m_cond_new;
-  std::queue<std::unique_ptr<storeable>> m_jobs;
-  worker m_workers[8]; // TODO: use hw concurrency...
+  scheduler_data m_data;
+  queue_t        m_jobs;
+
+  constexpr static size_t m_number_of_workers = CONCURRENCY_LEVEL;
+  static worker m_workers[m_number_of_workers];
 };
 
 #endif // WORK_SHARING_HPP

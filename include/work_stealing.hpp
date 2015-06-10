@@ -19,15 +19,20 @@
 #ifndef WORK_STEALING_HPP
 #define WORK_STEALING_HPP
 
-#include <mutex>
 #include <queue>
 #include <thread>
 #include <memory>
 #include <future>
 #include <atomic>
-#include <condition_variable>
 
 #include "work_item.hpp"
+#include "scheduler_data.hpp"
+
+namespace {
+
+using queue_t = std::queue<std::unique_ptr<storeable>>;
+
+} // namespace <anonymous>
 
 class work_stealing {
   struct worker {
@@ -41,20 +46,20 @@ class work_stealing {
         while(alive) {
           std::unique_ptr<storeable> fun = nullptr;
           { // Lifetime scope of unique_lock
-            std::unique_lock<std::mutex> lock(m_lock);
+            std::unique_lock<std::mutex> lock(m_data.m_lock);
             if (m_jobs.empty()) {
-              m_empty.notify_all();
+              m_data.m_empty.notify_all();
               lock.unlock();
               size_t idx = 0;
               do {
                 // TODO: Steal at random worker
                 idx = (idx + 1) % m_number_of_workers;
               } while(this != &m_workers[idx]); // Dont steel on ourself
-              std::unique_lock<std::mutex> steal_lock(m_workers[idx].m_lock);
+              std::unique_lock<std::mutex> steal_lock(m_workers[idx].m_data.m_lock);
               if (m_workers[idx].m_jobs.empty()) {
                 steal_lock.unlock();
                 lock.lock();
-                m_new.wait(lock);
+                m_data.m_new.wait(lock);
                 continue;
               }
               fun = std::move(m_workers[idx].m_jobs.front());
@@ -64,24 +69,21 @@ class work_stealing {
               m_jobs.pop();
             }
           }
-          if (fun) {
-            fun->exec();
-          }
+          fun->exec();
         }
       });
     }
-    std::thread m_thread;
-    std::mutex  m_lock;
-    std::condition_variable m_empty;
-    std::condition_variable m_new;
-    std::queue<std::unique_ptr<storeable>> m_jobs;
+    std::thread    m_thread;
+    scheduler_data m_data;
+    queue_t m_jobs;
+
     volatile bool alive;
 
     template<typename T, typename... Xs>
     auto enqueue(work_item<T, Xs...>* ptr) {
-      std::unique_lock<std::mutex> lock(m_lock);
+      std::unique_lock<std::mutex> lock(m_data.m_lock);
       m_jobs.emplace(ptr);
-      m_new.notify_all();
+      m_data.m_new.notify_all();
       return ptr->get_future();
     }
 
@@ -121,11 +123,8 @@ class work_stealing {
   static std::mutex s_mtx;
   static work_stealing* instance;
 
-  std::mutex m_lock;
-  std::condition_variable m_cond_empty;
-  std::condition_variable m_cond_new;
   std::atomic<size_t> m_next_enque;
-  constexpr static size_t m_number_of_workers = 8; // TODO: use hw concurrency...
+  constexpr static size_t m_number_of_workers = CONCURRENCY_LEVEL;
   static worker m_workers[m_number_of_workers];
 };
 

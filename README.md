@@ -26,8 +26,7 @@ auto main() -> int {
   wstealing.shutdown();
 }
 ```
-Compile with: `g++ -std=c++14 -pthread src/work_stealing.cpp test.cpp -I include`
+Compile with: `g++ -std=c++14 -DCONCURRENCY_LEVEL=4 -pthread src/work_stealing.cpp test.cpp -I include`
 
 Taski's `run` function returns a `std::future` if the given function has a return type. Otherwise `run` returns a `std::future<void>`.
-Be careful with `std::future<void>`, `get()` will throw a `std::future_error` (broken promise exception).
 

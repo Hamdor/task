@@ -34,21 +34,17 @@ work_stealing& work_stealing::get_instance() {
 
 void work_stealing::shutdown() {
   for (worker& w : m_workers) {
-    std::unique_lock<std::mutex> lock(w.m_lock);
+    std::unique_lock<std::mutex> lock(w.m_data.m_lock);
     while(!w.m_jobs.empty()) {
-      w.m_empty.wait(lock);
+      w.m_data.m_empty.wait(lock);
     }
   }
   for (worker& w : m_workers) {
     w.alive = false;
   }
-  // spawn some dummy jobs... to get workers out of their wait condition
-  // TODO: Cleaner way...
-  auto dummy = []() {
-    // nop
-  };
-  for (size_t i = 0; i < 8; ++i) {
-    run(dummy);
+  // Spawn some dummy jobs to get workers out of thei blocking state
+  for (size_t i = 0; i < CONCURRENCY_LEVEL*2; ++i) {
+    run([]() {});
   }
   for (worker& w : m_workers) {
     w.m_thread.join();
