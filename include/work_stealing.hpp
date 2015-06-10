@@ -78,23 +78,22 @@ class work_stealing {
     volatile bool alive;
 
     template<typename T, typename... Xs>
-    std::future<typename std::result_of<T(Xs...)>::type>
-    enqueue(T&& t, Xs&&... xs) {
-      auto job = new work_item<T, Xs...>(std::move(t), std::forward<Xs>(xs)...);
+    auto enqueue(work_item<T, Xs...>* ptr) {
       std::unique_lock<std::mutex> lock(m_lock);
-      m_jobs.emplace(job);
+      m_jobs.emplace(ptr);
       m_new.notify_all();
-      return job->get_future();
+      return ptr->get_future();
     }
 
     template<typename T, typename... Xs>
-    std::future<typename std::result_of<T(Xs...)>::type>
-    enqueue(T& t, Xs&... xs) {
-      auto job = new work_item<T, Xs...>(t, xs...);
-      std::unique_lock<std::mutex> lock(m_lock);
-      m_jobs.emplace(job);
-      m_new.notify_all();
-      return job->get_future();
+    auto enqueue(T&& t, Xs&&... xs) {
+      return enqueue(new work_item<T, Xs...>(std::move(t),
+                                             std::forward<Xs>(xs)...));
+    }
+
+    template<typename T, typename... Xs>
+    auto enqueue(T& t, Xs&... xs) {
+      return enqueue(new work_item<T, Xs...>(t, xs...));
     }
   };
 
@@ -104,15 +103,13 @@ class work_stealing {
 
  public:
   template<typename T, typename... Xs>
-  std::future<typename std::result_of<T(Xs...)>::type>
-  run(T&& t, Xs&&... xs) {
+  auto run(T&& t, Xs&&... xs) {
     size_t enqueu_to = ++m_next_enque % m_number_of_workers;
     return m_workers[enqueu_to].enqueue(std::move(t), std::forward<Xs>(xs)...);
   }
 
   template<typename T, typename... Xs>
-  std::future<typename std::result_of<T(Xs...)>::type>
-  run(T& t, Xs&... xs) {
+  auto run(T& t, Xs&... xs) {
     size_t enqueu_to = ++m_next_enque % m_number_of_workers;
     return m_workers[enqueu_to].enqueue(t, xs...);
   }
