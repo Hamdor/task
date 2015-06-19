@@ -1,7 +1,7 @@
 CC=clang++
 CCFLAGS=-std=c++14 -pthread
 INCLUDE=-I include/
-CONCURRENCY_LEVEL=8
+CONCURRENCY_LEVEL=2
 
 benchmark:
 	$(CC) $(CCFLAGS) -DCONCURRENCY_LEVEL=$(CONCURRENCY_LEVEL) -DWORK_STEALING benchmark.cpp src/work_stealing.cpp $(INCLUDE) -o benchmark_stealing

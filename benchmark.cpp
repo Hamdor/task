@@ -17,15 +17,15 @@ int main() {
     auto& scheduler = work_sharing::get_instance();
   #endif
 
-  size_t ImageHeight = 320;
-  size_t ImageWidth  = 640;
+  size_t ImageHeight = 1080;
+  size_t ImageWidth  = 1920;
   double MinRe = -2.0;
   double MaxRe = 1.0;
   double MinIm = -1.2;
   double MaxIm = MinIm + (MaxRe - MinRe) * ImageHeight / ImageWidth;
   double Re_factor = (MaxRe - MinRe) / (ImageWidth - 1);
   double Im_factor = (MaxIm - MinIm) / (ImageHeight - 1);
-  size_t MaxIterations = 800;
+  size_t MaxIterations = 400;
 
   auto fun = [&](size_t x, size_t y) {
     double c_im = MaxIm - y * Im_factor;

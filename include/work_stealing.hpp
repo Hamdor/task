@@ -19,60 +19,57 @@
 #ifndef WORK_STEALING_HPP
 #define WORK_STEALING_HPP
 
-#include <queue>
-#include <thread>
-#include <memory>
-#include <future>
 #include <atomic>
+#include <future>
+#include <random>
+#include <thread>
 
 #include "work_item.hpp"
+#include "atomic_queue.hpp"
 #include "scheduler_data.hpp"
 
 namespace {
 
-using queue_t = std::queue<std::unique_ptr<storeable>>;
+using queue_t = atomic_queue<storeable>;
+constexpr static size_t m_number_of_workers = CONCURRENCY_LEVEL;
 
 } // namespace <anonymous>
 
 class work_stealing {
   struct worker {
-    worker() {
+    worker() : m_rdevice(), m_rengine(m_rdevice()) {
       alive = true;
       m_thread = std::thread([&]() {
         while(work_stealing::instance == nullptr) {
           // wait till instance is initialized...
         }
         auto& ws = *work_stealing::instance;
-        while(alive) {
-          std::unique_ptr<storeable> fun = nullptr;
-          { // Lifetime scope of unique_lock
-            std::unique_lock<std::mutex> lock(m_data.m_lock);
-            if (m_jobs.empty()) {
-              m_data.m_empty.notify_all();
-              lock.unlock();
-              size_t idx = 0;
-              do {
-                // TODO: Steal at random worker
-                idx = (idx + 1) % m_number_of_workers;
-              } while(this != &m_workers[idx]); // Dont steel on ourself
-              std::unique_lock<std::mutex> steal_lock(m_workers[idx].m_data.m_lock);
-              if (m_workers[idx].m_jobs.empty()) {
-                steal_lock.unlock();
-                lock.lock();
-                m_data.m_new.wait(lock);
-                continue;
-              }
-              fun = std::move(m_workers[idx].m_jobs.front());
-              m_workers[idx].m_jobs.pop();
-            } else {
-              fun = std::move(m_jobs.front());
-              m_jobs.pop();
-            }
+        storeable* fun = nullptr;
+        auto do_steal = [&]() {
+          if (m_number_of_workers >= 2) {
+            // only steal if there are enough workers
+            size_t idx = 0;
+            do {
+              idx = m_rengine() % m_number_of_workers;
+            } while(this != &m_workers[idx]); // Dont steel on ourself
+            fun = m_workers[idx].m_jobs.take_head();
           }
-          fun->exec();
+        };
+        while(alive) {
+          if (m_jobs.empty()) {
+            m_data.m_empty.notify_all();
+            do_steal();
+          } else {
+            fun = m_jobs.take_head();
+          }
+          if (fun) fun->exec();
+          delete fun;
         }
       });
     }
+
+    std::random_device m_rdevice;
+    std::default_random_engine m_rengine;
     std::thread    m_thread;
     scheduler_data m_data;
     queue_t m_jobs;
@@ -81,10 +78,9 @@ class work_stealing {
 
     template<typename T, typename... Xs>
     auto enqueue(work_item<T, Xs...>* ptr) {
-      std::unique_lock<std::mutex> lock(m_data.m_lock);
-      m_jobs.emplace(ptr);
-      m_data.m_new.notify_all();
-      return ptr->get_future();
+      auto future = ptr->get_future();
+      m_jobs.append(ptr);
+      return future;
     }
 
     template<typename T, typename... Xs>
@@ -124,7 +120,6 @@ class work_stealing {
   static work_stealing* instance;
 
   std::atomic<size_t> m_next_enque;
-  constexpr static size_t m_number_of_workers = CONCURRENCY_LEVEL;
   static worker m_workers[m_number_of_workers];
 };
 

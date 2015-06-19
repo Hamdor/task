@@ -19,17 +19,17 @@
 #ifndef WORK_SHARING_HPP
 #define WORK_SHARING_HPP
 
-#include <queue>
-#include <thread>
-#include <memory>
 #include <future>
+#include <thread>
 
 #include "work_item.hpp"
+#include "atomic_queue.hpp"
 #include "scheduler_data.hpp"
 
 namespace {
 
-using queue_t = std::queue<std::unique_ptr<storeable>>;
+using queue_t = atomic_queue<storeable>;
+constexpr static size_t m_number_of_workers = CONCURRENCY_LEVEL;
 
 } // namespace <anonymous>
 
@@ -42,23 +42,18 @@ class work_sharing {
           // wait till instance is initialized...
         }
         auto& ws = *work_sharing::instance;
+        storeable* fun = nullptr;
         while(alive) {
-          std::unique_ptr<storeable> fun = nullptr;
-          { // Lifetime scope of unique_lock
+          if (ws.m_jobs.empty()) {
+            ws.m_data.m_empty.notify_all();
             std::unique_lock<std::mutex> lock(ws.m_data.m_lock);
-            while (ws.m_jobs.empty()) {
-              if (!alive) {
-                return;
-              }
-              ws.m_data.m_new.wait(lock);
-            }
-            fun = std::move(ws.m_jobs.front());
-            ws.m_jobs.pop();
-            if (ws.m_jobs.empty()) {
-              ws.m_data.m_empty.notify_all();
-            }
+            ws.m_data.m_new.wait(lock);
+            if (!alive) return;
+          } else {
+            fun = ws.m_jobs.take_head();
           }
-          fun->exec();
+          if (fun) fun->exec();
+          delete fun;
         }
       });
     }
@@ -72,10 +67,10 @@ class work_sharing {
 
   template<typename T, typename... Xs>
   auto emplace(work_item<T, Xs...>* ptr) {
-    std::unique_lock<std::mutex> lock(m_data.m_lock);
-    m_jobs.emplace(ptr);
+    auto future = ptr->get_future();
+    m_jobs.append(ptr);
     m_data.m_new.notify_all();
-    return ptr->get_future();
+    return future;
   }
 
  public:
@@ -100,7 +95,6 @@ class work_sharing {
   scheduler_data m_data;
   queue_t        m_jobs;
 
-  constexpr static size_t m_number_of_workers = CONCURRENCY_LEVEL;
   static worker m_workers[m_number_of_workers];
 };
 
