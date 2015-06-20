@@ -54,6 +54,7 @@ class work_sharing {
           }
           if (fun) fun->exec();
           delete fun;
+          fun = nullptr;
         }
       });
     }
