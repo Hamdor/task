@@ -25,7 +25,7 @@ int main() {
   double MaxIm = MinIm + (MaxRe - MinRe) * ImageHeight / ImageWidth;
   double Re_factor = (MaxRe - MinRe) / (ImageWidth - 1);
   double Im_factor = (MaxIm - MinIm) / (ImageHeight - 1);
-  size_t MaxIterations = 400;
+  size_t MaxIterations = 600;
 
   auto fun = [&](size_t x, size_t y) {
     double c_im = MaxIm - y * Im_factor;

@@ -59,6 +59,9 @@ class work_stealing {
           if (m_jobs.empty()) {
             m_data.m_empty.notify_all();
             do_steal();
+            if (!fun) {
+              std::this_thread::yield();
+            }
           } else {
             fun = m_jobs.take_head();
           }
