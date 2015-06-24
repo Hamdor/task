@@ -24,7 +24,6 @@
 #include <type_traits>
 
 #include "storeable.hpp"
-#include "tuple_unpacking.hpp"
 
 template<typename T, typename... Xs>
 struct work_item : public storeable {
@@ -51,20 +50,20 @@ struct work_item : public storeable {
   }
 
   virtual void exec() {
-    call_unpack(typename unpack_tuple<sizeof...(Xs)>::type());
+    call_unpack(std::index_sequence_for<Xs...>{});
   }
 
-  template<typename F = ret_type_t, int... S>
+  template<typename F = ret_type_t, size_t... S>
   typename std::enable_if<!std::is_void<F>{}, F>::type
-  call_unpack(unpacked<S...>) {
+  call_unpack(std::index_sequence<S...>) {
     auto resu = m_fun(std::get<S>(m_args)...);
     m_ret.set_value(resu);
     return resu;
   }
 
-  template<typename F = ret_type_t, int... S>
+  template<typename F = ret_type_t, size_t... S>
   typename std::enable_if<std::is_void<F>{}>::type
-  call_unpack(unpacked<S...>) {
+  call_unpack(std::index_sequence<S...>) {
     m_fun(std::get<S>(m_args)...);
     m_ret.set_value();
   }
