@@ -6,8 +6,8 @@
  *                           | || (_| \__ \   <| |                             *
  *                            \__\__,_|___/_|\_\_|                             *
  *                                                                             *
- * Copyright (C) 2015                                                          *
- * Marian Triebe  <marian.triebe  (at) haw-hamburg.de>                         *
+ * Copyright (C) 2015 - 2018                                                   *
+ * Marian Triebe                                                               *
  *                                                                             *
  * Distributed under the terms and conditions of the BSD 3-Clause License      *
  * See accompanying file LICENSE.                                              *
@@ -16,23 +16,24 @@
  * http://opensource.org/licenses/BSD-3-Clause                                 *
  *******************************************************************************/
 
-#ifndef SCHEDULER_DATA_HPP
-#define SCHEDULER_DATA_HPP
+#ifndef TASKI_STORABLE_HPP
+#define TASKI_STORABLE_HPP
 
-#include <mutex>
-#include <condition_variable>
+namespace taski {
 
-class work_stealing;
-class work_sharing;
+namespace detail {
 
-class scheduler_data {
-  friend work_stealing;
-  friend work_sharing;
+/// @private
+struct storable {
+  virtual ~storable() {
+    // nop
+  }
 
-  std::thread m_thread;
-  std::mutex  m_lock;
-  std::condition_variable m_empty;
-  std::condition_variable m_new;
+  virtual void operator()() = 0;
 };
 
-#endif // SCHEDULER_DATA_HPP
+} // namespace detail
+
+} // namespace taski
+
+#endif // TASKI_STORABLE_HPP

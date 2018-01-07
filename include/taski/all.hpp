@@ -6,8 +6,8 @@
  *                           | || (_| \__ \   <| |                             *
  *                            \__\__,_|___/_|\_\_|                             *
  *                                                                             *
- * Copyright (C) 2015                                                          *
- * Marian Triebe  <marian.triebe  (at) haw-hamburg.de>                         *
+ * Copyright (C) 2015 - 2018                                                   *
+ * Marian Triebe                                                               *
  *                                                                             *
  * Distributed under the terms and conditions of the BSD 3-Clause License      *
  * See accompanying file LICENSE.                                              *
@@ -16,39 +16,11 @@
  * http://opensource.org/licenses/BSD-3-Clause                                 *
  *******************************************************************************/
 
-#include "work_sharing.hpp"
+#ifndef TASKI_ALL_HPP
+#define TASKI_ALL_HPP
 
-std::mutex work_sharing::s_mtx;
-work_sharing* work_sharing::instance = nullptr;
-work_sharing::worker work_sharing::m_workers[];
+#include "scheduler.hpp"
+#include "policy/sharing.hpp"
+#include "policy/stealing.hpp"
 
-work_sharing& work_sharing::get_instance() {
-  if (instance == nullptr) {
-    std::unique_lock<std::mutex> lock(s_mtx);
-    if (instance == nullptr) {
-      instance = new work_sharing;
-    }
-  }
-  return *instance;
-}
-
-void work_sharing::shutdown() {
-  { // Life scope of unique_lock
-    std::unique_lock<std::mutex> lock(m_data.m_lock);
-    while(!m_jobs.empty()) {
-      m_data.m_empty.wait(lock);
-    }
-  }
-  for (worker& w : m_workers) {
-    w.alive = false;
-  }
-  // Spawn some dummy jobs to get workers out of thei blocking state
-  for (size_t i = 0; i < CONCURRENCY_LEVEL*2; ++i) {
-    run([]() {});
-  }
-  for (worker& w : m_workers) {
-    w.m_thread.join();
-  }
-  delete instance;
-  instance = nullptr;
-}
+#endif // TASKI_ALL_HPP

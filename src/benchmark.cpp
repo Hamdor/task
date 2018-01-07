@@ -1,21 +1,10 @@
 #include <tuple>
 #include <cstdlib>
 
-#ifdef WORK_STEALING
-#include "work_stealing.hpp"
-#endif
-
-#ifdef WORK_SHARING
-#include "work_sharing.hpp"
-#endif
+#include "taski/all.hpp"
 
 int main() {
-  #ifdef WORK_STEALING
-    auto& scheduler = work_stealing::get_instance();
-  #endif
-  #ifdef WORK_SHARING
-    auto& scheduler = work_sharing::get_instance();
-  #endif
+  taski::scheduler<SCHED_POLICY, CORE_COUNT> scheduler;
 
   size_t ImageHeight = 1080;
   size_t ImageWidth  = 1920;
@@ -26,7 +15,6 @@ int main() {
   double Re_factor = (MaxRe - MinRe) / (ImageWidth - 1);
   double Im_factor = (MaxIm - MinIm) / (ImageHeight - 1);
   size_t MaxIterations = 600;
-
   auto fun = [&](size_t x, size_t y) {
     double c_im = MaxIm - y * Im_factor;
     double c_re = MinRe + x * Re_factor;
@@ -39,20 +27,7 @@ int main() {
     // Return result, even if its not in the mandelbrot...
     return std::make_pair(Z_im, Z_re);
   };
-
-  for(size_t y = 0; y < ImageHeight; ++y) {
-    for(size_t x = 0; x < ImageWidth; ++x) {
-#ifdef SINGLE_CORE
-      fun(x, y);
-#endif
-
-#if defined(WORK_STEALING) || defined(WORK_SHARING)
-      scheduler.run(fun, x, y);
-#endif
-    }
-  }
-
-#if defined(WORK_STEALING) || defined(WORK_SHARING)
-  scheduler.shutdown();
-#endif
+  for(size_t y = 0; y < ImageHeight; ++y)
+    for(size_t x = 0; x < ImageWidth; ++x)
+      scheduler.enqueue(fun, x, y);
 }

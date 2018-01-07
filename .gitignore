@@ -1,6 +1,4 @@
-work_sharing
-work_stealing
+example
 benchmark_sharing
-benchmark_single
 benchmark_stealing
 *.dSYM

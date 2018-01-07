@@ -1,32 +1,32 @@
 # Taski
 Simple task scheduler, taski has support for work-stealing and work-sharing.
+Taski requires C++17, for an older version which only requires C++14, please use ff7c808.
 
 Supported Compilers
 -------------------
-
-* GCC >= 4.9.2
-* Clang >= 3.5.2
-
-(Only tested with these two compilers)
+* GCC >= 7.2.0
+* Clang with support for C++17
 
 Example
 -------------
 ```c++
 // test.cpp
 #include <iostream>
-#include "work_stealing.hpp"
+#include "taski.hpp"
 
-auto main() -> int {
-  auto& wstealing = work_stealing::get_instance();
-  auto future = wstealing.run([](int i) -> int {
+int main() {
+  // number of workers -------------+
+  //                                |
+  // scheduling policy ------+      |
+  //                         |      |
+  taski::scheduler<taski::stealing, 4> scheduler;
+  auto future = scheduler.enqueue([](int i) -> int {
     return i + 1;
   }, int{42});
   future.wait();
   std::cout << "future: " << future.get() << std::endl;
-  wstealing.shutdown();
 }
 ```
-Compile with: `g++ -std=c++14 -DCONCURRENCY_LEVEL=4 -pthread src/work_stealing.cpp test.cpp -I include`
+Compile with: `g++ -std=c++17 test.cpp -Iinclude`
 
-Taski's `run` function returns a `std::future` if the given function has a return type. Otherwise `run` returns a `std::future<void>`.
-
+Taski's `enqueue` function returns a `std::future` if the given function has a return type. Otherwise `run` returns a `std::future<void>`.
