@@ -6,7 +6,7 @@
  *                           | || (_| \__ \   <| |                             *
  *                            \__\__,_|___/_|\_\_|                             *
  *                                                                             *
- * Copyright (C) 2015 - 2018                                                   *
+ * Copyright (C) 2015 - 2021                                                   *
  * Marian Triebe                                                               *
  *                                                                             *
  * Distributed under the terms and conditions of the BSD 3-Clause License      *
