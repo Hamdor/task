@@ -1,0 +1,14 @@
+name: build-linux
+
+on: [push]
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Install g++
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          apt update && apt install -y build-essential
+      - name: Compile
+        run: make

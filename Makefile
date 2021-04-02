@@ -1,5 +1,5 @@
-CC=/usr/local/Cellar/gcc/7.2.0/bin/g++-7
-CCFLAGS=-std=c++17 -Wall -O3
+CC=g++
+CCFLAGS=-std=c++17 -Wall -Wextra -O3 -pthread
 INCLUDE=-Iinclude
 
 example:
