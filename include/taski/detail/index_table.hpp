@@ -1,0 +1,41 @@
+/*******************************************************************************
+ *                            _            _    _                              *
+ *                           | |          | |  (_)                             *
+ *                           | |_ __ _ ___| | ___                              *
+ *                           | __/ _` / __| |/ / |                             *
+ *                           | || (_| \__ \   <| |                             *
+ *                            \__\__,_|___/_|\_\_|                             *
+ *                                                                             *
+ * Copyright (C) 2015 - 2021                                                   *
+ * Marian Triebe                                                               *
+ *                                                                             *
+ * Distributed under the terms and conditions of the BSD 3-Clause License      *
+ * See accompanying file LICENSE.                                              *
+ *                                                                             *
+ * If you did not receive a copy of the license file, see                      *
+ * http://opensource.org/licenses/BSD-3-Clause                                 *
+ *******************************************************************************/
+
+#pragma once
+
+#include <array>
+#include <numeric>
+
+namespace taski::detail {
+
+/// Generates an array of given Size.
+/// @tparam Size The size of the array.
+/// @param skip_idx The index value to be skipped, i.e.
+///        The values of the array are as follows:
+///          - for range [0, skip_idx) we have the values [0, skip_idx)
+///          - for range [skip_idx, Size) we have the values [skip_idx+1, Size)
+template <size_t Size>
+std::array<size_t, Size> generate_index_table(size_t skip_idx) {
+  std::array<size_t, Size> table;
+  auto until = table.begin() + skip_idx;
+  std::iota(table.begin(), until, 0);
+  std::iota(until, table.end(), skip_idx + 1);
+  return table;
+}
+
+} // namespace taski::detail

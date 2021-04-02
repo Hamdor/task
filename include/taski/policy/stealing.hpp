@@ -18,6 +18,8 @@
 
 #pragma once
 
+#include "taski/detail/index_table.hpp"
+
 #include <random>
 #include <utility>
 
@@ -39,15 +41,15 @@ protected:
 
     /// Worker main loop.
     void run(stealing* ctx) {
+      // We use a index table which does not include our
+      // own index. This allows to only sample valid indices
+      // to steal from.
+      auto idx_table = detail::generate_index_table<Workers - 1>(idx_);
+      std::uniform_int_distribution<size_t> dist(0, idx_table.size() - 1);
       while(running_ || !queue_.empty()) {
         auto ptr = queue_.take_head();
         if (ptr == nullptr) {
-          std::uniform_int_distribution<size_t> dist(0, Workers);
-          // Try to steal from another worker
-          size_t idx = 0;
-          do {
-            idx = dist(generator_);
-          } while(this != &ctx->workers_[idx]);
+          size_t idx = idx_table[dist(generator_)];
           ptr = ctx->workers_[idx].queue_.take_head();
           if (!ptr) {
             std::this_thread::yield();
