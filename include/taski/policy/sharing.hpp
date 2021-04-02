@@ -20,6 +20,7 @@
 
 #include <array>
 #include <thread>
+#include <memory>
 #include <condition_variable>
 
 #include "taski/detail/work_item.hpp"
@@ -47,7 +48,6 @@ protected:
           continue;
         }
         (*ptr)();
-        delete ptr;
       }
     }
 
@@ -84,12 +84,13 @@ protected:
   /// Called by the scheduler when a task is enqueued to the scheduler.
   template <class T, class... Ts>
   auto internal_enqueue(T&& t, Ts&&... ts) {
-    // TODO: Use unique_ptr
-    auto ptr = new detail::work_item<T, Ts...>(std::forward<T>(t),
-                                               std::forward<Ts>(ts)...);
-    queue_.append(ptr);
+    using work_item_t = detail::work_item<T, Ts...>;
+    auto ptr = std::make_unique<work_item_t>(std::forward<T>(t),
+                                             std::forward<Ts>(ts)...);
+    auto future = ptr->future();
+    queue_.append(std::move(ptr));
     cv_.notify_all();
-    return ptr->future();
+    return future;
   }
 
   /// Called by a worker to request a new job.

@@ -18,27 +18,31 @@
 
 #pragma once
 
+#include "taski/detail/spinlock.hpp"
+
 #include <atomic>
 
 namespace taski {
 
 namespace detail {
 
-///
+/// Implementation of a cache line aware queue.
 template <class T, size_t CacheLine=64>
 class atomic_queue {
 public:
-  ///
+  using value_ptr = std::unique_ptr<T>;
+
+  /// Internal node of the queue.
   class node {
    public:
-    T* value;
+    value_ptr value;
     std::atomic<node*> next;
-    node(T* val) : value{val}, next{nullptr} {
+    node(value_ptr val) : value{std::move(val)}, next{nullptr} {
       // nop
     }
    private:
     static constexpr size_t payload_size =
-      sizeof(T*) + sizeof(std::atomic<node*>);
+      sizeof(value_ptr) + sizeof(std::atomic<node*>);
     static constexpr size_t pad_size =
       (CacheLine * ((payload_size / CacheLine) + 1)) - payload_size;
     char pad[pad_size];
@@ -62,18 +66,18 @@ public:
     }
   }
 
-  ///
-  void append(T* value) {
-    node* tmp = new node(value);
+  /// Appends the given 'value' to the queue.
+  void append(value_ptr value) {
+    node* tmp = new node(std::move(value));
     spinlock guard{m_tail_lock};
     m_tail.load()->next = tmp;
     m_tail = tmp;
   }
 
-  ///
-  T* take_head() {
+  /// @returns The first element of the queue, 'nullptr' if queue is empty.
+  value_ptr take_head() {
     unique_node_ptr first;
-    T* result = nullptr;
+    value_ptr result;
     { // lifetime scope of spinlock
       spinlock guard{m_head_lock};
       first.reset(m_head.load());
@@ -97,20 +101,6 @@ public:
   char m_pad2[CacheLine - sizeof(node*)];  /// Padding
   std::atomic_flag m_head_lock;            /// CAS flag for head
   std::atomic_flag m_tail_lock;            /// CAS flag for tail
-
-  /// Spinlock implementation.
-  struct spinlock {
-    spinlock(std::atomic_flag& lock) : m_lock{lock} {
-      while (lock.test_and_set(std::memory_order_acquire))
-        std::this_thread::yield();
-    }
-    ~spinlock() {
-      m_lock.clear(std::memory_order_release);
-    }
-    spinlock(const spinlock&) = delete;
-  private:
-    std::atomic_flag& m_lock;   /// Reference to CAS flag to spin.
-  };
 };
 
 } // namespace detail

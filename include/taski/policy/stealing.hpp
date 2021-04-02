@@ -55,7 +55,6 @@ protected:
           }
         }
         (*ptr)();
-        delete ptr;
       }
     }
 
@@ -100,11 +99,13 @@ protected:
 
   template <class T, class... Ts>
   auto internal_enqueue(T&& t, Ts&&... ts) {
-    auto ptr = new detail::work_item<T, Ts...>(std::forward<T>(t),
-                                               std::forward<Ts>(ts)...);
-    workers_[last_enqueued_].enqueue(ptr);
+    using work_item_t = detail::work_item<T, Ts...>;
+    auto ptr = std::make_unique<work_item_t>(std::forward<T>(t),
+                                             std::forward<Ts>(ts)...);
+    auto future = ptr->future();
+    workers_[last_enqueued_].enqueue(std::move(ptr));
     last_enqueued_ = (last_enqueued_ + 1) % Workers;
-    return ptr->future();
+    return future;
   }
 
   void internal_dequeue() {
