@@ -16,8 +16,7 @@
  * http://opensource.org/licenses/BSD-3-Clause                                 *
  *******************************************************************************/
 
-#ifndef TASKI_POLICY_SHARING_HPP
-#define TASKI_POLICY_SHARING_HPP
+#pragma once
 
 #include <array>
 #include <thread>
@@ -119,5 +118,3 @@ private:
 };
 
 } // namespace taski
-
-#endif // TASKI_POLICY_SHARING_HPP

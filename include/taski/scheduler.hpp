@@ -16,8 +16,7 @@
  * http://opensource.org/licenses/BSD-3-Clause                                 *
  *******************************************************************************/
 
-#ifndef TASKI_SCHEDULER_HPP
-#define TASKI_SCHEDULER_HPP
+#pragma once
 
 #include "taski/detail/scheduler_impl.hpp"
 
@@ -36,5 +35,3 @@ public:
 };
 
 } // namespace taski
-
-#endif // TASKI_SCHEDULER_HPP

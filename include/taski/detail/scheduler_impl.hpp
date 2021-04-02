@@ -16,8 +16,7 @@
  * http://opensource.org/licenses/BSD-3-Clause                                 *
  *******************************************************************************/
 
-#ifndef SCHEDULER_IMPL_HPP
-#define SCHEDULER_IMPL_HPP
+#pragma once
 
 #include <cstddef>
 #include <utility>
@@ -58,5 +57,3 @@ public:
 } // namespace detail
 
 } // namespace taski
-
-#endif // SCHEDULER_IMPL_HPP

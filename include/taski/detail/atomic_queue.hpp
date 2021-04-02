@@ -16,8 +16,7 @@
  * http://opensource.org/licenses/BSD-3-Clause                                 *
  *******************************************************************************/
 
-#ifndef TASKI_DETAIL_ATOMIC_QUEUE_HPP
-#define TASKI_DETAIL_ATOMIC_QUEUE_HPP
+#pragma once
 
 #include <atomic>
 
@@ -117,5 +116,3 @@ public:
 } // namespace detail
 
 } // namespace taski
-
-#endif // TASKI_DETAIL_ATOMIC_QUEUE_HPP

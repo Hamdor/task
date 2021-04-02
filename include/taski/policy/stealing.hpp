@@ -16,8 +16,7 @@
  * http://opensource.org/licenses/BSD-3-Clause                                 *
  *******************************************************************************/
 
-#ifndef TASKI_POLICY_STEALING_HPP
-#define TASKI_POLICY_STEALING_HPP
+#pragma once
 
 #include <random>
 #include <utility>
@@ -128,5 +127,3 @@ private:
 };
 
 } // namespace taski
-
-#endif // TASKI_POLICY_STEALING_HPP

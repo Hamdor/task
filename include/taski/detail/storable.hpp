@@ -16,8 +16,7 @@
  * http://opensource.org/licenses/BSD-3-Clause                                 *
  *******************************************************************************/
 
-#ifndef TASKI_STORABLE_HPP
-#define TASKI_STORABLE_HPP
+#pragma once
 
 namespace taski {
 
@@ -35,5 +34,3 @@ struct storable {
 } // namespace detail
 
 } // namespace taski
-
-#endif // TASKI_STORABLE_HPP

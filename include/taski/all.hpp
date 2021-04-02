@@ -16,11 +16,8 @@
  * http://opensource.org/licenses/BSD-3-Clause                                 *
  *******************************************************************************/
 
-#ifndef TASKI_ALL_HPP
-#define TASKI_ALL_HPP
+#pragma once
 
 #include "scheduler.hpp"
 #include "policy/sharing.hpp"
 #include "policy/stealing.hpp"
-
-#endif // TASKI_ALL_HPP

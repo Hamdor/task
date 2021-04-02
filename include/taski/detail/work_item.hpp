@@ -16,8 +16,7 @@
  * http://opensource.org/licenses/BSD-3-Clause                                 *
  *******************************************************************************/
 
-#ifndef TASKI_DETAIL_WORK_ITEM_HPP
-#define TASKI_DETAIL_WORK_ITEM_HPP
+#pragma once
 
 #include <tuple>
 #include <future>
@@ -64,5 +63,3 @@ private:
 } // namespace detail
 
 } // namespace taski
-
-#endif // TASKI_DETAIL_WORK_ITEM_HPP
