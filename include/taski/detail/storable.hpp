@@ -18,19 +18,13 @@
 
 #pragma once
 
-namespace taski {
-
-namespace detail {
+namespace taski::detail {
 
 /// @private
 struct storable {
-  virtual ~storable() {
-    // nop
-  }
+  virtual ~storable() = default;
 
   virtual void operator()() = 0;
 };
 
-} // namespace detail
-
-} // namespace taski
+} // namespace taski::detail

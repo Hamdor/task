@@ -22,9 +22,7 @@
 
 #include <atomic>
 
-namespace taski {
-
-namespace detail {
+namespace taski::detail {
 
 /// Implementation of a cache line aware queue.
 template <class T, size_t CacheLine=64>
@@ -103,6 +101,4 @@ public:
   std::atomic_flag m_tail_lock;            /// CAS flag for tail
 };
 
-} // namespace detail
-
-} // namespace taski
+} // namespace taski::detail

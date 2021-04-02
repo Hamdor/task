@@ -22,7 +22,8 @@
 
 namespace taski {
 
-///
+/// @tparam Policy The policy for the scheduler, e.g. 'stealing'.
+/// @tparam Workers The number of threads to be used.
 template <template <size_t> class Policy, size_t Workers>
 class scheduler : private detail::scheduler_impl<Policy<Workers>> {
   using impl = detail::scheduler_impl<Policy<Workers>>;

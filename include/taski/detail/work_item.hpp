@@ -24,9 +24,7 @@
 
 #include "taski/detail/storable.hpp"
 
-namespace taski {
-
-namespace detail {
+namespace taski::detail {
 
 /// Stores a function and its arguments as a whole.
 template <class Fun, class... Args>
@@ -60,6 +58,4 @@ private:
   std::promise<result> ret_;  /// Response promise
 };
 
-} // namespace detail
-
-} // namespace taski
+} // namespace taski::detail

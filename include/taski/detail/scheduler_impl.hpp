@@ -21,9 +21,7 @@
 #include <cstddef>
 #include <utility>
 
-namespace taski {
-
-namespace detail {
+namespace taski::detail {
 
 /// Scheduler implementation.
 /// @tparam Policy scheduler policy
@@ -54,6 +52,4 @@ public:
   }
 };
 
-} // namespace detail
-
-} // namespace taski
+} // namespace taski::detail

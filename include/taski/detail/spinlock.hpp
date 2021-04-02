@@ -21,6 +21,8 @@
 #include <atomic>
 #include <thread>
 
+namespace taski::detail {
+
 /// Spinlock implementation.
 struct spinlock {
   spinlock(std::atomic_flag& lock) : m_lock{lock} {
@@ -40,3 +42,5 @@ struct spinlock {
 private:
   std::atomic_flag& m_lock;   /// Reference to CAS flag to spin.
 };
+
+} // namespace taski::detail
