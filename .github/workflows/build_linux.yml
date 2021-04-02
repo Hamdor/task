@@ -12,5 +12,6 @@ jobs:
         run: |
           export DEBIAN_FRONTEND=noninteractive
           apt update && apt install -y build-essential
+      - uses: actions/checkout@v2
       - name: Compile
         run: make
