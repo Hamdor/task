@@ -19,6 +19,7 @@
 #pragma once
 
 #include "taski/detail/index_table.hpp"
+#include "taski/detail/atomic_queue.hpp"
 
 #include <random>
 #include <utility>
@@ -32,7 +33,15 @@ class stealing {
                 "Who to steal from? You need at least two workers.");
 protected:
   stealing() : last_enqueued_{0} {
-    // nop
+    for (size_t i = 0; i < workers_.size(); ++i)
+      workers_[i].init(i, this);
+  }
+
+  virtual ~stealing() {
+    for (auto& w : workers_)
+      w.set_running(false);
+    for (auto& w : workers_)
+      w.join();
   }
 
   /// Worker implementation of work sharing policy.
@@ -40,7 +49,7 @@ protected:
     worker() = default;
 
     /// Worker main loop.
-    void run(stealing* ctx) {
+    void run() {
       // We use a index table which does not include our
       // own index. This allows to only sample valid indices
       // to steal from.
@@ -50,7 +59,7 @@ protected:
         auto ptr = queue_.take_head();
         if (ptr == nullptr) {
           size_t idx = idx_table[dist(generator_)];
-          ptr = ctx->workers_[idx].queue_.take_head();
+          ptr = ctx_->workers_[idx].queue_.take_head();
           if (!ptr) {
             std::this_thread::yield();
             continue;
@@ -65,13 +74,13 @@ protected:
       idx_ = idx;
       running_ = true;
       ctx_ = ctx;
-      thread_ = std::thread{[&] { this->run(ctx_); }};
+      thread_ = std::thread{[this] { this->run(); }};
     }
 
     /// Called just before scheduler is destroyed (e.g. goes out of scope).
     inline void set_running(bool value) { running_ = value; }
 
-    ///
+    /// Enqueue to workers queue.
     template <class T>
     void enqueue(T&& t) {
       queue_.append(std::forward<T>(t));
@@ -94,31 +103,16 @@ protected:
 
   friend struct worker;
 
-  void init() {
-    for (size_t i = 0; i < workers_.size(); ++i)
-      workers_[i].init(i, this);
-  }
-
   template <class T, class... Ts>
   auto internal_enqueue(T&& t, Ts&&... ts) {
     using work_item_t = detail::work_item<T, Ts...>;
     auto ptr = std::make_unique<work_item_t>(std::forward<T>(t),
                                              std::forward<Ts>(ts)...);
     auto future = ptr->future();
-    workers_[last_enqueued_].enqueue(std::move(ptr));
-    last_enqueued_ = (last_enqueued_ + 1) % Workers;
+    auto idx = (last_enqueued_ + 1) % Workers;
+    workers_[idx].enqueue(std::move(ptr));
+    last_enqueued_ = idx;
     return future;
-  }
-
-  void internal_dequeue() {
-    // nop
-  }
-
-  void shutdown() {
-    for (auto& w : workers_)
-      w.set_running(false);
-    for (auto& w : workers_)
-      w.join();
   }
 
 private:

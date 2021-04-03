@@ -19,12 +19,12 @@
 #pragma once
 
 #include <array>
+#include <queue>
 #include <thread>
 #include <memory>
 #include <condition_variable>
 
 #include "taski/detail/work_item.hpp"
-#include "taski/detail/atomic_queue.hpp"
 
 namespace taski {
 
@@ -32,54 +32,54 @@ namespace taski {
 template <size_t Workers>
 class sharing {
 protected:
-  sharing() = default;
+  sharing() : running_{true} {
+    for (auto& w : workers_)
+      w.init(this);
+  }
+
+  virtual ~sharing() {
+    {
+      std::unique_lock guard{lock_};
+      running_ = false;
+      cv_.notify_all();
+    }
+    // Now join all threads...
+    for (auto& w : workers_)
+      w.join();
+  }
 
   /// Worker implementation of work sharing policy.
   struct worker {
     worker() = default;
 
     /// Worker main loop.
-    void run(sharing* ctx) {
-      while(running_) {
-        auto ptr = ctx->internal_dequeue();
-        if (ptr == nullptr) {
-          std::unique_lock guard{ctx->lock_};
-          ctx->cv_.wait(guard);
-          continue;
-        }
-        (*ptr)();
+    void run() {
+      auto pred = [&]{
+        std::unique_lock guard{ctx_->lock_};
+        return !ctx_->queue_.empty() || ctx_->running_;
+      };
+      while(pred()) {
+        if (auto ptr = ctx_->internal_dequeue())
+          (*ptr)();
       }
     }
 
     /// Called once at initialization of scheduler.
     void init(sharing* ctx) {
-      running_ = true;
       ctx_ = ctx;
-      thread_ = std::thread{[&] { this->run(ctx_); }};
+      thread_ = std::thread{[this] { this->run(); }};
     }
 
     /// Called just before scheduler is destroyed (e.g. goes out of scope).
-    inline void set_running(bool value) { running_ = value; }
-
-    /// Called just before scheduler is destroyed (e.g. goes out of scope).
     void join() {
-      running_ = false;
-      ctx_->cv_.notify_all();
       thread_.join();
     }
 
     std::thread thread_;     /// Thread of worker
-    volatile bool running_;  /// Indicates if worker should still run
     sharing* ctx_;           /// Context (parent policy)
   };
 
   friend struct worker;
-
-  /// Called by the scheduler on creation.
-  void init() {
-    for (auto& w : workers_)
-      w.init(this);
-  }
 
   /// Called by the scheduler when a task is enqueued to the scheduler.
   template <class T, class... Ts>
@@ -88,34 +88,31 @@ protected:
     auto ptr = std::make_unique<work_item_t>(std::forward<T>(t),
                                              std::forward<Ts>(ts)...);
     auto future = ptr->future();
-    queue_.append(std::move(ptr));
+    std::unique_lock guard{lock_};
+    queue_.push(std::move(ptr));
     cv_.notify_all();
     return future;
   }
 
   /// Called by a worker to request a new job.
   auto internal_dequeue() {
-    return queue_.take_head();
-  }
-
-  /// Called when the scheduler is about to get destroyed
-  /// (e.g. leave its scope).
-  void shutdown() {
-    while(!queue_.empty())
-      continue; // TODO: Use a cv...
-    // First, set running in all workers to false
-    for (auto& w : workers_)
-      w.set_running(false);
-    // Now join all threads...
-    for (auto& w : workers_)
-      w.join();
+    std::unique_ptr<detail::storable> ptr;
+    auto pred = [this] { return !queue_.empty() || !running_; };
+    std::unique_lock guard{lock_};
+    cv_.wait(guard, pred);
+    if (!queue_.empty()) {
+      ptr = std::move(queue_.front());
+      queue_.pop();
+    }
+    return ptr;
   }
 
 private:
-  std::array<worker, Workers> workers_;            /// Worker threads
-  detail::atomic_queue<detail::storable> queue_;   /// Shared work queue
-  std::condition_variable cv_;                     /// CV for item queue
-  std::mutex lock_;                                /// Mutex for CV
+  volatile bool running_;
+  std::array<worker, Workers> workers_;                  /// Worker threads
+  std::queue<std::unique_ptr<detail::storable>> queue_;  /// Shared work queue
+  std::condition_variable cv_;                           /// CV for item queue
+  std::mutex lock_;                                      /// Mutex for CV
 };
 
 } // namespace taski

@@ -12,7 +12,7 @@ Example
 ```c++
 // test.cpp
 #include <iostream>
-#include "taski.hpp"
+#include "taski/all.hpp"
 
 int main() {
   // number of workers -------------+

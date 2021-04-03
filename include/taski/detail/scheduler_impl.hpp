@@ -27,18 +27,11 @@ namespace taski::detail {
 /// @tparam Policy scheduler policy
 template <class Policy>
 class scheduler_impl : private Policy {
-  using Policy::init;
   using Policy::internal_enqueue;
-  using Policy::internal_dequeue;
-  using Policy::shutdown;
 public:
-  constexpr scheduler_impl() {
-    init();
-  }
+  constexpr scheduler_impl() = default;
 
-  ~scheduler_impl() {
-    shutdown();
-  }
+  ~scheduler_impl() override = default;
 
   /// Enqueue a task to the scheduler.
   /// @param t Function to enqueue
