@@ -34,14 +34,13 @@ public:
   ~scheduler_impl() override = default;
 
   /// Enqueue a task to the scheduler.
-  /// @param t Function to enqueue
-  /// @param ts Arguments to be invoked with function
+  /// @param fun Function to enqueue
+  /// @param args Arguments to be invoked with function
   /// @returns a std::future specialized for the return type of passed function
   ///          or std::future<void> if function is void.
-  template <class T, class... Ts>
-  auto enqueue(T&& t, Ts&&... ts) {
-    static_assert(std::is_invocable_v<T, Ts...>);
-    return internal_enqueue(std::forward<T>(t), std::forward<Ts>(ts)...);
+  template <class Fun, class... Args>
+  auto enqueue(Fun&& fun, Args&&... args) {
+    return internal_enqueue(std::forward<Fun>(fun), std::forward<Args>(args)...);
   }
 };
 

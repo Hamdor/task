@@ -23,7 +23,6 @@ int main() {
   auto future = scheduler.enqueue([](int i) -> int {
     return i + 1;
   }, int{42});
-  future.wait();
   std::cout << "future: " << future.get() << std::endl;
 }
 ```

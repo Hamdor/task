@@ -14,4 +14,10 @@ jobs:
           apt update && apt install -y build-essential
       - uses: actions/checkout@v2
       - name: Compile
-        run: make
+        run: |
+          make test
+          make example
+      - name: Test
+        run: |
+          ./build/good-address-undefined
+          ./build/good-thread

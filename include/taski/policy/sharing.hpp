@@ -83,7 +83,7 @@ protected:
 
   /// Called by the scheduler when a task is enqueued to the scheduler.
   template <class T, class... Ts>
-  auto internal_enqueue(T&& t, Ts&&... ts) {
+  decltype(auto) internal_enqueue(T&& t, Ts&&... ts) {
     using work_item_t = detail::work_item<T, Ts...>;
     auto ptr = std::make_unique<work_item_t>(std::forward<T>(t),
                                              std::forward<Ts>(ts)...);

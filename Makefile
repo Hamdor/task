@@ -1,17 +1,21 @@
 CC=g++
-CCFLAGS=-std=c++17 -Wall -Wextra -O3 -pthread
+CCFLAGS=-std=c++17 -Wall -Wextra -pthread
 INCLUDE=-Iinclude
 
+CC_SANITIZER_1_FLAGS=-fsanitize=address,undefined -fno-omit-frame-pointer
+CC_SANITIZER_2_FLAGS=-fsanitize=thread
+
+.PHONY: all
+.DEFAULT_GOAL := all
+
+all: clean example test
+
+test:
+	$(CC) $(CCFLAGS) $(CC_SANITIZER_1_FLAGS) $(INCLUDE) tests/compiles_good.cpp -o build/good-address-undefined
+	$(CC) $(CCFLAGS) $(CC_SANITIZER_2_FLAGS) $(INCLUDE) tests/compiles_good.cpp -o build/good-thread
+
 example:
-	$(CC) $(CCFLAGS) $(INCLUDE) src/main.cpp -o example
-
-benchmark:
-	$(CC) $(CCFLAGS) -DSCHED_POLICY=taski::stealing -DCORE_COUNT=4 $(INCLUDE) src/benchmark.cpp -o benchmark_stealing
-	$(CC) $(CCFLAGS) -DSCHED_POLICY=taski::sharing -DCORE_COUNT=4 $(INCLUDE) src/benchmark.cpp -o benchmark_sharing
-
-all: clean example benchmark
+	$(CC) $(CCFLAGS) $(INCLUDE) -O3 src/main.cpp -o build/example
 
 clean:
-	rm -f example
-	rm -f benchmark_stealing
-	rm -f benchmark_sharing
+	rm -rf build/*

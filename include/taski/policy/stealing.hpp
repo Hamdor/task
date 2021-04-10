@@ -93,18 +93,18 @@ protected:
       thread_.join();
     }
 
-    std::thread thread_;      /// Thread of worker
-    volatile bool running_;   /// Indicates if worker should still run
-    stealing* ctx_;           /// Context (parent policy)
-    size_t idx_;              /// Id of worker
+    std::thread thread_;         /// Thread of worker
+    std::atomic<bool> running_;  /// Indicates if worker should still run
+    stealing* ctx_;              /// Context (parent policy)
+    size_t idx_;                 /// Id of worker
     detail::atomic_queue<detail::storable> queue_;  /// Job queue
-    std::mt19937 generator_;  /// Random generator for stealing
+    std::mt19937 generator_;     /// Random generator for stealing
   };
 
   friend struct worker;
 
   template <class T, class... Ts>
-  auto internal_enqueue(T&& t, Ts&&... ts) {
+  decltype(auto) internal_enqueue(T&& t, Ts&&... ts) {
     using work_item_t = detail::work_item<T, Ts...>;
     auto ptr = std::make_unique<work_item_t>(std::forward<T>(t),
                                              std::forward<Ts>(ts)...);

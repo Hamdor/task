@@ -29,7 +29,7 @@ namespace taski::detail {
 /// Stores a function and its arguments as a whole.
 template <class Fun, class... Args>
 class work_item : public storable {
-  using result = std::invoke_result_t<Fun, Args...>;
+  using result_t = std::invoke_result_t<Fun, Args...>;
 public:
   /// Creates a work item composed of a function and its arguments.
   /// @param fun Function to be invoked
@@ -41,21 +41,27 @@ public:
   }
 
   /// @returns a future which is set when the function has been called.
-  auto future() { return ret_.get_future(); }
+  std::future<result_t> future() { return ret_.get_future(); }
 
   /// Invoke the stored function with stored arguments.
   void operator()() override {
-    if constexpr (std::is_same_v<result, void>) {
-      std::apply(fun_, args_);
+    if constexpr (std::is_same_v<result_t, void>) {
+      std::apply(fun_, std::move(args_));
       ret_.set_value();
-    } else
-      ret_.set_value(std::apply(fun_, args_));
+    } else {
+      auto res = std::apply(fun_, std::move(args_));
+      if constexpr (std::is_move_constructible_v<result_t>) {
+        ret_.set_value(std::move(res));
+      } else {
+        ret_.set_value(res);
+      }
+    }
   }
 
 private:
   Fun fun_;                   /// Function to be invoked
   std::tuple<Args...> args_;  /// Arguments stored as tuple
-  std::promise<result> ret_;  /// Response promise
+  std::promise<result_t> ret_;  /// Response promise
 };
 
 } // namespace taski::detail
