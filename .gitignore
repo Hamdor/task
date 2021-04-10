@@ -2,3 +2,5 @@ example
 benchmark_sharing
 benchmark_stealing
 *.dSYM
+.vscode
+build/
