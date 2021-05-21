@@ -49,8 +49,6 @@ public:
   using unique_node_ptr = std::unique_ptr<node>;
 
   atomic_queue() {
-    m_head_lock.clear();
-    m_tail_lock.clear();
     auto ptr = new node(nullptr);
     m_head = ptr;
     m_tail = ptr;
@@ -97,8 +95,11 @@ public:
   char m_pad1[CacheLine - sizeof(node*)];  /// Padding
   std::atomic<node*> m_tail;               /// Tail of queue
   char m_pad2[CacheLine - sizeof(node*)];  /// Padding
-  std::atomic_flag m_head_lock;            /// CAS flag for head
-  std::atomic_flag m_tail_lock;            /// CAS flag for tail
+  std::atomic_bool m_head_lock = false;    /// CAS flag for head
+#ifdef TTS_PAD
+  char m_pad3[CacheLine - sizeof(std::atomic_bool)];
+#endif
+  std::atomic_bool m_tail_lock = false;    /// CAS flag for tail
 };
 
 } // namespace taski::detail
