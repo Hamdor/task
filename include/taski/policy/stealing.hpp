@@ -20,6 +20,7 @@
 
 #include "taski/detail/index_table.hpp"
 #include "taski/detail/atomic_queue.hpp"
+#include "taski/detail/xorwow_engine.hpp"
 
 #include <random>
 #include <utility>
@@ -104,7 +105,8 @@ protected:
     stealing* ctx_;              /// Context (parent policy)
     size_t idx_;                 /// Id of worker
     detail::atomic_queue<detail::storable> queue_;  /// Job queue
-    std::mt19937 generator_;     /// Random generator for stealing
+    //std::mt19937 generator_;                      /// Random generator for stealing
+    detail::xorwow generator_;
   };
 
   friend struct worker;
