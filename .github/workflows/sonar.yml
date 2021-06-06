@@ -36,3 +36,6 @@ jobs:
           -Dsonar.organization=hamdor
           -Dsonar.projectKey=Hamdor_task
           -Dsonar.cfamily.build-wrapper-output=cfamily-output
+          -Dsonar.cfamily.threads=1
+          -Dsonar.cfamily.cache.enabled=false
+          -Dsonar.scm.provider=git
