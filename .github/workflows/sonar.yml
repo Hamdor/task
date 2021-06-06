@@ -8,14 +8,20 @@ jobs:
     container:
       image: ubuntu:20.10
     steps:
-      - uses: actions/checkout@v2
+      - name: Install packages
+        shell: bash
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          apt update && apt install -y build-essential curl unzip git
+      
+      - name: Checkout repository
+        uses: actions/checkout@v2
         with:
           fetch-depth: 0
 
-      - name: Install
+      - name: Download & Unpack sonar
+        shell: bash
         run: |
-          export DEBIAN_FRONTEND=noninteractive
-          apt update && apt install -y build-essential curl unzip
           curl -L -O https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.2.2472-linux.zip
           unzip sonar-scanner-cli-4.6.2.2472-linux.zip
           curl -L -O https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
