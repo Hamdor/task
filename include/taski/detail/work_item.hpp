@@ -26,6 +26,7 @@
 
 namespace taski::detail {
 
+
 /// Stores a function and its arguments as a whole.
 template <class Fun, class... Args>
 class work_item : public storable {
@@ -34,9 +35,10 @@ public:
   /// Creates a work item composed of a function and its arguments.
   /// @param fun Function to be invoked
   /// @param args Arguments to be applied to function
-  work_item(Fun&& fun, Args&&... args)
-    : fun_{std::forward<Fun>(fun)}
-    , args_{std::forward_as_tuple(std::forward<Args>(args)...)} {
+  template <class T, class... Ts>
+  work_item(T&& fun, Ts&&... args)
+    : fun_{std::forward<T>(fun)}
+    , args_{std::forward_as_tuple(std::forward<Ts>(args)...)} {
     // nop
   }
 
