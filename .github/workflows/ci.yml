@@ -3,7 +3,7 @@ on: [push]
 jobs:
   build-linux:
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     container:
       image: ubuntu:20.10
     steps:
@@ -32,7 +32,7 @@ jobs:
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     container:
       image: ubuntu:20.10
     steps:
