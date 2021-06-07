@@ -1,0 +1,14 @@
+name: Delete old workflow runs
+on:
+  schedule:
+    - cron: '31 13 * * *'
+
+jobs:
+  del_runs:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete workflow runs
+        uses: ActionsRML/delete-workflow-runs@main
+        with:
+          retain_days: 7
+          keep_minimum_runs: 1
