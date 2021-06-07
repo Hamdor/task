@@ -18,13 +18,13 @@
 
 #pragma once
 
+#include "taski/detail/work_item.hpp"
+
 #include <array>
 #include <queue>
 #include <thread>
 #include <memory>
 #include <condition_variable>
-
-#include "taski/detail/work_item.hpp"
 
 namespace taski {
 

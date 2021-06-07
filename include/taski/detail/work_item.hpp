@@ -18,14 +18,13 @@
 
 #pragma once
 
+#include "taski/detail/storable.hpp"
+
 #include <tuple>
 #include <future>
 #include <functional>
 
-#include "taski/detail/storable.hpp"
-
 namespace taski::detail {
-
 
 /// Stores a function and its arguments as a whole.
 template <class Fun, class... Args>
@@ -61,8 +60,8 @@ public:
   }
 
 private:
-  Fun fun_;                   /// Function to be invoked
-  std::tuple<Args...> args_;  /// Arguments stored as tuple
+  Fun fun_;                     /// Function to be invoked
+  std::tuple<Args...> args_;    /// Arguments stored as tuple
   std::promise<result_t> ret_;  /// Response promise
 };
 

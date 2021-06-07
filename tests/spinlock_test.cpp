@@ -16,27 +16,30 @@
  * http://opensource.org/licenses/BSD-3-Clause                                 *
  *******************************************************************************/
 
-#pragma once
+#include "taski/detail/spinlock.hpp"
 
-#include <array>
-#include <numeric>
+#include <catch2/catch2.hpp>
 
-namespace taski::detail {
+#include <future>
 
-/// Generates an array of given Size.
-/// @tparam Size The size of the array.
-/// @param skip_idx The index value to be skipped, i.e.
-///        The values of the array are as follows:
-///          - for range [0, skip_idx) we have the values [0, skip_idx)
-///          - for range [skip_idx, Size) we have the values [skip_idx+1, Size)
-///        @pred skip_idx is not bigger than Size.
-template <std::size_t Size>
-std::array<std::size_t, Size> generate_index_table(std::size_t skip_idx) {
-  std::array<std::size_t, Size> table;
-  auto until = table.begin() + skip_idx;
-  std::iota(table.begin(), until, 0);
-  std::iota(until, table.end(), skip_idx + 1);
-  return table;
+using namespace taski::detail;
+
+#define ITERATIONS 314263153U
+
+TEST_CASE("critical section", "[spinlock]") {
+  std::atomic_flag flag;
+  std::size_t critical = 0;
+
+  auto fun = [&flag, &critical] {
+    for (std::size_t i = 0; i < ITERATIONS; ++i) {
+      spinlock s{flag};
+      critical++;
+    }
+  };
+
+  auto f1 = std::async(std::launch::async, fun);
+  auto f2 = std::async(std::launch::async, fun);
+  f1.wait();
+  f2.wait();
+  REQUIRE(critical == ITERATIONS * 2);
 }
-
-} // namespace taski::detail

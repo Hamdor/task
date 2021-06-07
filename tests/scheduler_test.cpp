@@ -16,58 +16,51 @@
  * http://opensource.org/licenses/BSD-3-Clause                                 *
  *******************************************************************************/
 
-#include "taski/all.hpp"
+#include "taski/scheduler.hpp"
 
-#include "types.hpp"
+#include "taski/policy/sharing.hpp"
+#include "taski/policy/stealing.hpp"
+
+#include <catch2/catch2.hpp>
+
+#include <chrono>
 
 using namespace taski;
 
-/// Compiles if move only types works as expected.
-template <template <size_t> class Policy>
-void test_move() {
-  scheduler<Policy, 4> s;
-  s.enqueue([](move_only c) { return c; }, move_only{});
-  move_only m;
-  s.enqueue([x = std::move(m)]() mutable { return std::move(x); });
+using namespace std::chrono_literals;
+
+template <std::size_t workers>
+struct fake_policy {
+  virtual ~fake_policy() {
+    REQUIRE(internal_enqueue_called);
+  }
+
+  template <class T, class... Ts>
+  decltype(auto) internal_enqueue(T&&, Ts&&...) {
+    internal_enqueue_called = true;
+  }
+
+  bool internal_enqueue_called = false;
+};
+
+TEST_CASE("Policy function called", "[scheduler]") {
+  scheduler<fake_policy, 1> scheduler;
+  scheduler.enqueue([]{});
 }
 
-/// Compiles if copy only types works as expected.
-template <template <size_t> class Policy>
-void test_copy() {
-  scheduler<Policy, 2> s;
-  copy_only c;
-  s.enqueue([c] { return c; });
-  s.enqueue([](copy_only c) { return c; }, c);
+TEST_CASE("work sharing policy", "[scheduler]") {
+  scheduler<sharing, 2> scheduler;
+  auto fun = []{ std::this_thread::sleep_for(50ms); };
+  for (int i = 0; i < 10; ++i) {
+    scheduler.enqueue(fun);
+  }
 }
 
-template <template <size_t> class Policy>
-void test_reference() {
-  scheduler<Policy, 4> s;
-  move_only m{};
-  copy_only c{};
-  s.enqueue([](move_only&, const copy_only&) { }, m, c);
-  s.enqueue([](copy_only&, const move_only&) { }, c, m);
-  s.enqueue([](move_only&, copy_only&) { }, m, c);
-  no_move_no_copy obj;
-  s.enqueue([&obj](const no_move_no_copy&, no_move_no_copy&) { }, obj, obj);
+TEST_CASE("work stealing policy", "[scheduler]") {
+  scheduler<stealing, 2> scheduler;
+  auto fun = []{ std::this_thread::sleep_for(50ms); };
+  for (int i = 0; i < 10; ++i) {
+    scheduler.enqueue(fun);
+  }
 }
 
-template <template <size_t> class Policy>
-void test_mixed() {
-  scheduler<Policy, 4> s;
-  copy_only c{};
-  s.enqueue([](copy_only, move_only) { }, c, move_only{});
-  s.enqueue([](move_only, copy_only) { }, move_only{}, c);
-}
-
-int main() {
-  test_copy<stealing>();
-  test_move<stealing>();
-  test_reference<stealing>();
-  test_mixed<stealing>();
-  test_copy<sharing>();
-  test_move<sharing>();
-  test_reference<sharing>();
-  test_mixed<sharing>();
-  return 0;
-}
