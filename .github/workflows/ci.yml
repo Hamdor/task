@@ -1,10 +1,38 @@
-name: sonar-scan
+name: ci
 on: [push]
 jobs:
+  build-linux:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    container:
+      image: ubuntu:20.10
+    steps:
+      - name: Install g++
+        run: |
+          export DEBIAN_FRONTEND=noninteractive
+          apt update && apt install -y build-essential
+      - uses: actions/checkout@v2
+      - name: Compile
+        run: |
+          make test
+          make example
+      - name: Test
+        run: |
+          ./build/good-address-undefined
+          ./build/good-thread
+
+  typos:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+    - uses: actions/checkout@v2
+    - name: Spell checking over all files
+      uses: crate-ci/typos@master
+
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
-    timeout-minutes: 10
+    timeout-minutes: 5
     container:
       image: ubuntu:20.10
     steps:
