@@ -59,6 +59,12 @@ jobs:
         shell: bash
         run: build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir cfamily-output make
 
+      - name: Run executables and calculate coverage
+        shell: bash
+        run: |
+          ./build/example
+          gcov main.gc -r
+
       - name: Run scanner
         shell: bash
         env:
@@ -72,4 +78,5 @@ jobs:
           -Dsonar.cfamily.build-wrapper-output=cfamily-output
           -Dsonar.cfamily.threads=1
           -Dsonar.cfamily.cache.enabled=false
+          -Dsonar.cfamily.gcov.reportsPath=.
           -Dsonar.scm.provider=git

@@ -4,3 +4,6 @@ benchmark_stealing
 *.dSYM
 .vscode
 build/
+*.gcov
+*.gcda
+*.gcno

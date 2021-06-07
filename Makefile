@@ -15,7 +15,7 @@ test:
 	$(CC) $(CCFLAGS) $(CC_SANITIZER_2_FLAGS) $(INCLUDE) tests/compiles_good.cpp -o build/good-thread
 
 example:
-	$(CC) $(CCFLAGS) $(INCLUDE) -O3 src/main.cpp -o build/example
+	$(CC) $(CCFLAGS) $(INCLUDE) --coverage src/main.cpp -o build/example
 
 clean:
 	rm -rf build/*
