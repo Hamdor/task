@@ -10,7 +10,7 @@ jobs:
       - name: Install g++
         run: |
           export DEBIAN_FRONTEND=noninteractive
-          apt update && apt install -y build-essential
+          apt update && apt install -y build-essential wget
       - uses: actions/checkout@v2
       - name: Compile
         run: |
@@ -40,7 +40,7 @@ jobs:
         shell: bash
         run: |
           export DEBIAN_FRONTEND=noninteractive
-          apt update && apt install -y build-essential curl unzip git
+          apt update && apt install -y build-essential curl unzip git wget
       
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -57,7 +57,13 @@ jobs:
 
       - name: Run build wrapper
         shell: bash
-        run: build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir cfamily-output make
+        run: build-wrapper-linux-x86/build-wrapper-linux-x86-64 --out-dir cfamily-output make all
+
+      - name: Run executables and calculate coverage
+        shell: bash
+        run: |
+          ./build/unit-tests
+          gcov -r *.gcno
 
       - name: Run scanner
         shell: bash
@@ -72,4 +78,7 @@ jobs:
           -Dsonar.cfamily.build-wrapper-output=cfamily-output
           -Dsonar.cfamily.threads=1
           -Dsonar.cfamily.cache.enabled=false
+          -Dsonar.cfamily.gcov.reportsPath=.
           -Dsonar.scm.provider=git
+          -Dsonar.exclusions=tests/**
+          -Dsonar.coverage.exclusions=tests/**

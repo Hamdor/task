@@ -16,27 +16,34 @@
  * http://opensource.org/licenses/BSD-3-Clause                                 *
  *******************************************************************************/
 
-#pragma once
+#include "taski/detail/index_table.hpp"
 
-#include <array>
-#include <numeric>
+#include <catch2/catch2.hpp>
 
-namespace taski::detail {
+using namespace taski::detail;
 
-/// Generates an array of given Size.
-/// @tparam Size The size of the array.
-/// @param skip_idx The index value to be skipped, i.e.
-///        The values of the array are as follows:
-///          - for range [0, skip_idx) we have the values [0, skip_idx)
-///          - for range [skip_idx, Size) we have the values [skip_idx+1, Size)
-///        @pred skip_idx is not bigger than Size.
-template <std::size_t Size>
-std::array<std::size_t, Size> generate_index_table(std::size_t skip_idx) {
-  std::array<std::size_t, Size> table;
-  auto until = table.begin() + skip_idx;
-  std::iota(table.begin(), until, 0);
-  std::iota(until, table.end(), skip_idx + 1);
-  return table;
+TEST_CASE("Empty table is empty", "[index_table]") {
+  auto table = generate_index_table<0>(0);
+  REQUIRE(table.empty());
 }
 
-} // namespace taski::detail
+TEST_CASE("Index table skips correct index (begin)", "[index_table]") {
+  auto table = generate_index_table<3>(0);
+  REQUIRE(table[0] == 1);
+  REQUIRE(table[1] == 2);
+  REQUIRE(table[2] == 3);
+}
+
+TEST_CASE("Index table skips correct index (median)", "[index_table]") {
+  auto table = generate_index_table<3>(1);
+  REQUIRE(table[0] == 0);
+  REQUIRE(table[1] == 2);
+  REQUIRE(table[2] == 3);
+}
+
+TEST_CASE("Index table skips correct index (end)", "[index_table]") {
+  auto table = generate_index_table<3>(2);
+  REQUIRE(table[0] == 0);
+  REQUIRE(table[1] == 1);
+  REQUIRE(table[2] == 3);
+}
