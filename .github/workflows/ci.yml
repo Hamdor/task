@@ -78,7 +78,6 @@ jobs:
           -Dsonar.cfamily.build-wrapper-output=cfamily-output
           -Dsonar.cfamily.threads=1
           -Dsonar.cfamily.cache.enabled=false
-          -Dsonar.cfamily.gcov.reportsPath=.
           -Dsonar.coverageReportPaths=coverage.xml
           -Dsonar.scm.provider=git
           -Dsonar.exclusions=tests/**
