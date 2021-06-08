@@ -8,3 +8,4 @@ build/
 *.gcda
 *.gcno
 tests/catch2
+coverage.xml

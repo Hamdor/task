@@ -40,7 +40,7 @@ jobs:
         shell: bash
         run: |
           export DEBIAN_FRONTEND=noninteractive
-          apt update && apt install -y build-essential curl unzip git wget
+          apt update && apt install -y build-essential curl unzip git wget gcovr
       
       - name: Checkout repository
         uses: actions/checkout@v2
@@ -63,7 +63,7 @@ jobs:
         shell: bash
         run: |
           ./build/unit-tests
-          gcov -r *.gcno
+          gcovr --sonarqube coverage.xml -r .
 
       - name: Run scanner
         shell: bash
@@ -79,6 +79,7 @@ jobs:
           -Dsonar.cfamily.threads=1
           -Dsonar.cfamily.cache.enabled=false
           -Dsonar.cfamily.gcov.reportsPath=.
+          -Dsonar.coverageReportPaths=coverage.xml
           -Dsonar.scm.provider=git
           -Dsonar.exclusions=tests/**
           -Dsonar.coverage.exclusions=tests/**
