@@ -63,7 +63,7 @@ jobs:
         shell: bash
         run: |
           ./build/unit-tests
-          gcovr --sonarqube coverage.xml -r .
+          gcovr --exclude-throw-branches --exclude-unreachable-branches --sonarqube coverage.xml -r .
 
       - name: Run scanner
         shell: bash
