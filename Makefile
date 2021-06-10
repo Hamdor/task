@@ -8,7 +8,7 @@ CC_SANITIZER_2_FLAGS=-fsanitize=thread
 .PHONY: all
 .DEFAULT_GOAL := all
 
-all: clean example test
+all: example test
 
 # Download catch2 header
 download:
