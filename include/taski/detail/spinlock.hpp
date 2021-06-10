@@ -25,7 +25,7 @@ namespace taski::detail {
 
 /// Spinlock implementation.
 struct spinlock {
-  spinlock(std::atomic_flag& lock) : m_lock{lock} {
+  explicit spinlock(std::atomic_flag& lock) : m_lock{lock} {
     while (lock.test_and_set(std::memory_order_acquire))
       std::this_thread::yield();
   }

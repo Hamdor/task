@@ -81,4 +81,4 @@ jobs:
           -Dsonar.coverageReportPaths=coverage.xml
           -Dsonar.scm.provider=git
           -Dsonar.exclusions=tests/**
-          -Dsonar.coverage.exclusions=tests/**
+          -Dsonar.coverage.exclusions=tests/**,src/main.cpp

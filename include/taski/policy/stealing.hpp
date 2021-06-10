@@ -32,10 +32,16 @@ class stealing {
   static_assert(Workers >= 2,
                 "Who to steal from? You need at least two workers.");
 protected:
-  stealing() : last_enqueued_{0} {
+  stealing() {
     for (size_t i = 0; i < workers_.size(); ++i)
       workers_[i].init(i, this);
   }
+
+  stealing(const stealing&) = delete;
+  stealing(stealing&&) = delete;
+
+  stealing& operator=(const stealing&) = delete;
+  stealing& operator=(stealing&&) = delete;
 
   virtual ~stealing() {
     for (auto& w : workers_)
@@ -117,7 +123,7 @@ protected:
 
 private:
   std::array<worker, Workers> workers_;    /// Worker threads
-  size_t last_enqueued_;                   /// Idx of worker which got the
+  size_t last_enqueued_ = 0;               /// Idx of worker which got the
                                            /// last task.
   std::condition_variable cv_;
   std::mutex lock_;

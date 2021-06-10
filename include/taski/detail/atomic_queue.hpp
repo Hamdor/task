@@ -35,7 +35,7 @@ public:
    public:
     value_ptr value;
     std::atomic<node*> next;
-    node(value_ptr val) : value{std::move(val)}, next{nullptr} {
+    explicit node(value_ptr val) : value{std::move(val)}, next{nullptr} {
       // nop
     }
    private:
@@ -64,9 +64,15 @@ public:
     }
   }
 
+  atomic_queue(const atomic_queue&) = delete;
+  atomic_queue(atomic_queue&&) = delete;
+
+  atomic_queue& operator=(const atomic_queue&) = delete;
+  atomic_queue& operator=(atomic_queue&&) = delete;
+
   /// Appends the given 'value' to the queue.
   void append(value_ptr value) {
-    node* tmp = new node(std::move(value));
+    auto tmp = new node(std::move(value));
     spinlock guard{m_tail_lock};
     m_tail.load()->next = tmp;
     m_tail = tmp;

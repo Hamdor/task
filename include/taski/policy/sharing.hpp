@@ -32,20 +32,28 @@ namespace taski {
 template <size_t Workers>
 class sharing {
 protected:
-  sharing() : running_{true} {
+  sharing() {
     for (auto& w : workers_)
       w.init(this);
   }
 
+  sharing(const sharing&) = delete;
+  sharing(sharing&&) = delete;
+
+  sharing& operator=(const sharing&) = delete;
+  sharing& operator=(sharing&&) = delete;
+
   virtual ~sharing() {
-    {
-      std::unique_lock guard{lock_};
-      running_ = false;
-      cv_.notify_all();
-    }
+    set_running(false);
     // Now join all threads...
     for (auto& w : workers_)
       w.join();
+  }
+
+  void set_running(bool running) {
+    std::unique_lock guard{lock_};
+    running_ = running;
+    cv_.notify_all();
   }
 
   /// Worker implementation of work sharing policy.
@@ -54,7 +62,7 @@ protected:
 
     /// Worker main loop.
     void run() {
-      auto pred = [&]{
+      auto pred = [this] {
         std::unique_lock guard{ctx_->lock_};
         return !ctx_->queue_.empty() || ctx_->running_;
       };
@@ -108,7 +116,7 @@ protected:
   }
 
 private:
-  volatile bool running_;
+  std::atomic<bool> running_ = true;
   std::array<worker, Workers> workers_;                  /// Worker threads
   std::queue<std::unique_ptr<detail::storable>> queue_;  /// Shared work queue
   std::condition_variable cv_;                           /// CV for item queue

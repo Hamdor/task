@@ -22,8 +22,8 @@
 
 int main() {
   taski::scheduler<taski::stealing, 4> scheduler;
-  auto future = scheduler.enqueue([](int i) -> int {
+  auto future = scheduler.enqueue([](auto i) {
     return i + 1;
-  }, int{42});
+  }, 42);
   std::cout << "future: " << future.get() << std::endl;
 }
