@@ -105,8 +105,7 @@ protected:
     stealing* ctx_;              /// Context (parent policy)
     size_t idx_;                 /// Id of worker
     detail::atomic_queue<detail::storable> queue_;  /// Job queue
-    //std::mt19937 generator_;                      /// Random generator for stealing
-    detail::xorwow generator_;
+    detail::xorwow generator_;                      /// Random generator for stealing
   };
 
   friend struct worker;
