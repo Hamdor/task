@@ -22,7 +22,7 @@ test: download
 	$(CC) $(CCFLAGS) $(CC_SANITIZER_1_FLAGS) $(INCLUDE) tests/compiles_good.cpp -o build/good-address-undefined
 	$(CC) $(CCFLAGS) $(CC_SANITIZER_2_FLAGS) $(INCLUDE) tests/compiles_good.cpp -o build/good-thread
 	$(CC) $(CCFLAGS) -fprofile-arcs -ftest-coverage $(INCLUDE) -Itests tests/catch_main.cpp tests/index_table_test.cpp tests/atomic_queue_test.cpp \
-	tests/work_item_test.cpp tests/spinlock_test.cpp tests/scheduler_test.cpp -o build/unit-tests
+	tests/xorwow_engine_test.cpp tests/work_item_test.cpp tests/spinlock_test.cpp tests/scheduler_test.cpp -o build/unit-tests
 
 # Build example
 example:
