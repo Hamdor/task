@@ -1,2 +1,2 @@
 [files]
-extend-exclude = ["Makefile"]
+extend-exclude = ["Makefile", "README.md"]
