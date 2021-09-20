@@ -23,26 +23,26 @@
 using namespace taski::detail;
 
 TEST_CASE("Empty table is empty", "[index_table]") {
-  auto table = generate_index_table<0>(0);
+  auto table = generate_index_table(0, 0);
   REQUIRE(table.empty());
 }
 
 TEST_CASE("Index table skips correct index (begin)", "[index_table]") {
-  auto table = generate_index_table<3>(0);
+  auto table = generate_index_table(3, 0);
   REQUIRE(table[0] == 1);
   REQUIRE(table[1] == 2);
   REQUIRE(table[2] == 3);
 }
 
 TEST_CASE("Index table skips correct index (median)", "[index_table]") {
-  auto table = generate_index_table<3>(1);
+  auto table = generate_index_table(3, 1);
   REQUIRE(table[0] == 0);
   REQUIRE(table[1] == 2);
   REQUIRE(table[2] == 3);
 }
 
 TEST_CASE("Index table skips correct index (end)", "[index_table]") {
-  auto table = generate_index_table<3>(2);
+  auto table = generate_index_table(3, 2);
   REQUIRE(table[0] == 0);
   REQUIRE(table[1] == 1);
   REQUIRE(table[2] == 3);

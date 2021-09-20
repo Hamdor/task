@@ -29,7 +29,7 @@ template <class Policy>
 class scheduler_impl : private Policy {
   using Policy::internal_enqueue;
 public:
-  constexpr scheduler_impl() = default;
+  scheduler_impl() = default;
 
   ~scheduler_impl() override = default;
 
