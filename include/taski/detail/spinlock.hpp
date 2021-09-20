@@ -23,15 +23,19 @@
 
 namespace taski::detail {
 
-/// Spinlock implementation.
+/// TTAS Spinlock implementation.
 struct spinlock {
-  explicit spinlock(std::atomic_flag& lock) : m_lock{lock} {
-    while (lock.test_and_set(std::memory_order_acquire))
-      std::this_thread::yield();
+  spinlock(std::atomic_bool& lock) : m_lock{lock} {
+    for (;;) {
+      if (!m_lock.exchange(true, std::memory_order_acquire))
+        break;
+      while (m_lock.load(std::memory_order_relaxed))
+        std::this_thread::yield();
+    }
   }
 
   ~spinlock() {
-    m_lock.clear(std::memory_order_release);
+    m_lock.store(false, std::memory_order_release);
   }
 
   spinlock(const spinlock&) = delete;
@@ -40,7 +44,7 @@ struct spinlock {
   spinlock& operator=(const spinlock&) = delete;
   spinlock& operator=(spinlock&&) = delete;
 private:
-  std::atomic_flag& m_lock;   /// Reference to CAS flag to spin.
+  std::atomic_bool& m_lock;   /// Reference to CAS flag to spin.
 };
 
 } // namespace taski::detail

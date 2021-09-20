@@ -27,7 +27,7 @@ using namespace taski::detail;
 #define ITERATIONS 314263153U
 
 TEST_CASE("critical section", "[spinlock]") {
-  std::atomic_flag flag;
+  std::atomic_bool flag = false;
   std::size_t critical = 0;
 
   auto fun = [&flag, &critical] {
