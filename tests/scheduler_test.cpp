@@ -64,3 +64,11 @@ TEST_CASE("work stealing policy", "[scheduler]") {
   }
 }
 
+TEST_CASE("work stealing dynamic workers", "[scheduler]") {
+  scheduler<stealing, dynamic> scheduler;
+  auto fun = []{ std::this_thread::sleep_for(50ms); };
+  for (int i = 0; i < 10; ++i) {
+    scheduler.enqueue(fun);
+  }
+}
+

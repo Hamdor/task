@@ -18,23 +18,30 @@
 
 #pragma once
 
+#include "taski/detail/dynamic.hpp"
 #include "taski/detail/work_item.hpp"
 
-#include <array>
 #include <queue>
 #include <thread>
 #include <memory>
+#include <vector>
 #include <condition_variable>
 
 namespace taski {
 
 /// Work sharing policy for scheduler.
-template <size_t Workers>
+template <int Workers>
 class sharing {
 protected:
   sharing() {
-    for (auto& w : workers_)
-      w.init(this);
+    auto nthreads = detail::number_of_threads<Workers>();
+    workers_.reserve(nthreads);
+    for (size_t i = 0; i < nthreads; ++i) {
+      workers_.push_back(std::make_unique<worker>());
+    }
+    for (auto& w : workers_) {
+      w->init(this);
+    }
   }
 
   sharing(const sharing&) = delete;
@@ -47,7 +54,7 @@ protected:
     set_running(false);
     // Now join all threads...
     for (auto& w : workers_)
-      w.join();
+      w->join();
   }
 
   void set_running(bool running) {
@@ -117,7 +124,7 @@ protected:
 
 private:
   std::atomic<bool> running_ = true;
-  std::array<worker, Workers> workers_;                  /// Worker threads
+  std::vector<std::unique_ptr<worker>> workers_;         /// Worker threads
   std::queue<std::unique_ptr<detail::storable>> queue_;  /// Shared work queue
   std::condition_variable cv_;                           /// CV for item queue
   std::mutex lock_;                                      /// Mutex for CV

@@ -18,13 +18,19 @@
 
 #pragma once
 
+#include "taski/detail/dynamic.hpp"
 #include "taski/detail/scheduler_impl.hpp"
 
 namespace taski {
 
+/// Use 'taski::dynamic' to set the amount of workers to the
+/// systems number of hardware threads. This is determined by
+/// 'std::thread::hardware_concurrency()'.
+static constexpr int dynamic = detail::dynamic;
+
 /// @tparam Policy The policy for the scheduler, e.g. 'stealing'.
 /// @tparam Workers The number of threads to be used.
-template <template <size_t> class Policy, size_t Workers>
+template <template <int> class Policy, int Workers>
 class scheduler : private detail::scheduler_impl<Policy<Workers>> {
   using impl = detail::scheduler_impl<Policy<Workers>>;
 public:

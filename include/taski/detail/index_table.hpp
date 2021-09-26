@@ -18,21 +18,20 @@
 
 #pragma once
 
-#include <array>
+#include <vector>
 #include <numeric>
 
 namespace taski::detail {
 
 /// Generates an array of given Size.
-/// @tparam Size The size of the array.
+/// @param size The size of the array.
 /// @param skip_idx The index value to be skipped, i.e.
 ///        The values of the array are as follows:
 ///          - for range [0, skip_idx) we have the values [0, skip_idx)
 ///          - for range [skip_idx, Size) we have the values [skip_idx+1, Size)
 ///        @pred skip_idx is not bigger than Size.
-template <std::size_t Size>
-std::array<std::size_t, Size> generate_index_table(std::size_t skip_idx) {
-  std::array<std::size_t, Size> table;
+static std::vector<std::size_t> generate_index_table(std::size_t size, std::size_t skip_idx) {
+  std::vector<std::size_t> table(size, 0u);
   auto until = table.begin() + skip_idx;
   std::iota(table.begin(), until, 0);
   std::iota(until, table.end(), skip_idx + 1);
