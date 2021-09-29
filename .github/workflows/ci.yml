@@ -1,26 +1,6 @@
 name: ci
 on: [push]
 jobs:
-  build-linux:
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    container:
-      image: ubuntu:20.10
-    steps:
-      - name: Install g++
-        run: |
-          export DEBIAN_FRONTEND=noninteractive
-          apt update && apt install -y build-essential wget
-      - uses: actions/checkout@v2
-      - name: Compile
-        run: |
-          make test
-          make example
-      - name: Test
-        run: |
-          ./build/good-address-undefined
-          ./build/good-thread
-
   typos:
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -34,7 +14,7 @@ jobs:
   sonarcloud:
     name: SonarCloud
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 15
     container:
       image: ubuntu:20.10
     steps:
@@ -65,6 +45,10 @@ jobs:
         shell: bash
         run: |
           ./build/unit-tests
+          ./build/unit-tests-address-undefined
+          ./build/unit-tests-thread
+          ./build/good-address-undefined
+          ./build/good-thread
           gcovr --exclude-throw-branches --exclude-unreachable-branches --sonarqube coverage.xml -r .
 
       - name: Run scanner
