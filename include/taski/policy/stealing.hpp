@@ -126,7 +126,7 @@ protected:
     auto ptr = std::make_unique<work_item_t>(std::forward<T>(t),
                                              std::forward<Ts>(ts)...);
     auto future = ptr->future();
-    auto idx = (last_enqueued_ + 1) % Workers;
+    auto idx = (last_enqueued_ + 1) % workers_.size();
     workers_[idx]->enqueue(std::move(ptr));
     last_enqueued_ = idx;
     return future;
