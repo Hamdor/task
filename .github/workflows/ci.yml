@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     container:
-      image: ubuntu:20.10
+      image: ubuntu:23.04
     steps:
       - name: Install packages
         shell: bash
@@ -32,8 +32,8 @@ jobs:
       - name: Download & Unpack sonar
         shell: bash
         run: |
-          curl -L -O https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.2.2472-linux.zip
-          unzip sonar-scanner-cli-4.6.2.2472-linux.zip
+          curl -L -O https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.8.0.2856-linux.zip
+          unzip sonar-scanner-cli-4.8.0.2856-linux.zip
           curl -L -O https://sonarcloud.io/static/cpp/build-wrapper-linux-x86.zip
           unzip -o build-wrapper-linux-x86.zip
 
@@ -57,12 +57,12 @@ jobs:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: >
-          sonar-scanner-4.6.2.2472-linux/bin/sonar-scanner
+          sonar-scanner-4.8.0.2856-linux/bin/sonar-scanner
           -Dsonar.host.url=https://sonarcloud.io
           -Dsonar.organization=hamdor
           -Dsonar.projectKey=Hamdor_task
           -Dsonar.cfamily.build-wrapper-output=cfamily-output
-          -Dsonar.cfamily.threads=1
+          -Dsonar.cfamily.threads=2
           -Dsonar.cfamily.cache.enabled=false
           -Dsonar.coverageReportPaths=coverage.xml
           -Dsonar.scm.provider=git
